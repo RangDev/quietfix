@@ -31,8 +31,13 @@ class Client:
         except OneM2MError as e:
             if e.status != 404:
                 raise
-        return self.call('POST', parent, {kind: attrs}, ty,
-                         origin='Cqf'+attrs['rn'] if ty == 2 else None)
+        try:
+            return self.call('POST', parent, {kind: attrs}, ty,
+                             origin='Cqf'+attrs['rn'] if ty == 2 else None)
+        except OneM2MError as e:
+            if e.status != 409:
+                raise
+            return self.call('GET', parent+'/'+attrs['rn'])
     def put(self, container, data):
         # Immutable deterministic CIN name makes retry after a lost response safe.
         rn = 'qf-' + hashlib.sha256(data['sample_id'].encode()).hexdigest()

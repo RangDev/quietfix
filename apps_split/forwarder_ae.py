@@ -5,13 +5,22 @@ import time
 import config as c
 from onem2m_client import Client
 from worker_state import State
+from resource_registry import (discover_machines, ensure_archive, ensure_cnt,
+                               ensure_analyzer, register_machine)
 
 def step(mn, central, state):
-    paths = [(c.telemetry(m), f'{c.IN_BASE}/archive/{m}') for m in c.MACHINES]
-    paths.append((c.MN_BASE+'/analyzer/results', c.IN_BASE+'/archive/results'))
+    results = ensure_archive(central)
+    archive = c.IN_BASE+'/archive'
+    paths = []
+    for machine in discover_machines(mn, c.MN_BASE):
+        parent = ensure_cnt(central, archive, machine['collector_id'])
+        # Copy the catalog even if telemetry has not changed (new sensors/name).
+        target = register_machine(central, parent, machine)
+        paths.append((machine['path']+'/telemetry', target+'/telemetry'))
+    paths.append((ensure_analyzer(mn), results))
     for source, target in paths:
         for sample in mn.records(source):
-            key = source+':'+sample['sample_id']
+            key = 'v3:'+source+':'+sample['sample_id']
             if state.has(key):
                 continue
             central.put(target, sample)

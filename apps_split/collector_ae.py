@@ -7,6 +7,8 @@ import config as c
 from onem2m_client import Client
 from sensor_simulator import SensorSimulator
 from worker_state import State
+from device_model import identifier
+from resource_registry import ensure_ae, publish
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
@@ -20,11 +22,20 @@ def main():
     if a.cycles < 0:
         p.error('--cycles must be nonnegative')
     c.require_mn()
-    sensor = SensorSimulator(a.dataset, a.replay_id)
-    state = State('collector')
-    key = 'v2:'+sensor.fingerprint+':'+a.replay_id
+    identifier(c.COLLECTOR_ID)
+    sensor = SensorSimulator(a.dataset, a.replay_id, c.COLLECTOR_ID)
+    state = State('collector-'+c.COLLECTOR_ID)
+    key = 'v3:'+c.COLLECTOR_ID+':'+sensor.fingerprint+':'+a.replay_id
     index = state.position(key)
     client = Client(c.MN_URL)
+    # AE registration is performed at startup, before the first measurement.
+    while True:
+        try:
+            ensure_ae(client, c.MN_BASE, c.COLLECTOR_ID)
+            break
+        except Exception:
+            logging.exception('AE registration failed; retrying')
+            time.sleep(max(c.POLL_SECONDS, 0.1))
     deadline = time.monotonic()
     while a.cycles == 0 or index < len(sensor) * a.cycles:
         time.sleep(max(0, deadline - time.monotonic()))
@@ -34,7 +45,7 @@ def main():
             state.save_pending(key, sample)
         started = time.monotonic()
         try:
-            client.put(c.telemetry(sample['machine_id']), sample)
+            publish(client, sample)
             state.complete(key, index+1)
         except Exception:
             logging.exception('Publish failed; retrying row %s', index)

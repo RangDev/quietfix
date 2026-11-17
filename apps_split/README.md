@@ -1,124 +1,128 @@
-# QuietFix 역할 분리 버전
+# QuietFix 분리 버전 · 동적 머신/센서 등록
 
-기존 MEC Sandbox와 ACME MN-CSE/IN-CSE는 그대로 사용합니다. 이 파일들은 ACME 서버를 대체하지 않습니다. 기존 quietfix.py의 run/serve 프로세스는 중지하고 새 프로그램을 실행하세요. 기존 quietfix-in 서비스는 유지합니다.
+수집기 하나가 여러 머신을 관리하고, 각 머신에는 여러 센서가 연결되는 구조입니다. 기존 MEC Sandbox와 ACME MN-CSE/IN-CSE를 사용합니다. CSE 서버를 이 코드로 대체하지 않습니다.
 
-## 파일과 책임
+## 등록과 데이터 흐름
 
-|파일|실행 방식과 책임|
+| 시점 | 수행 주체와 동작 |
 |---|---|
-|sensor_simulator.py|collector가 import. JSON 배열을 순서대로 읽음. 네트워크 서버 없음|
-|collector_ae.py|독립 프로세스. 한 행씩 MN telemetry에 전송. 두 설비를 한 프로세스로 모사|
-|analyzer_ae.py|독립 프로세스. MN telemetry 조회 → 규칙 판정 → MN results|
-|forwarder_ae.py|독립 프로세스. MN telemetry/results 조회 → IN archive 복사|
-|dashboard.py|독립 HTTP 서버. IN만 조회. 데이터 생성·전송·분석 안 함|
-|onem2m_client.py|공용 HTTP/oneM2M 모듈|
-|config.py|환경변수 로딩. 장치마다 별도 설정 가능|
-|worker_state.py|프로세스별 로컬 SQLite 진행 상태 저장|
-|setup_resources.py|AE·container 초기 생성. 서버 시작이나 Mcc 설정은 안 함|
+| 수집기 시작 | `QF_COLLECTOR_ID` 이름의 AE를 MN에 등록. 이미 있으면 재사용 |
+| 새 머신의 첫 측정값 | 수집기가 자신의 AE 아래 머신 컨테이너, telemetry, metadata를 자동 생성 |
+| 새 센서의 첫 측정값 | 센서 ID·종류·표시명·단위를 머신 metadata에 추가 |
+| 분석기 폴링 | MN의 `quietfix-machine-v3` 라벨을 검색, 발견한 모든 머신의 샘플을 분석 |
+| 전달기 폴링 | 머신·센서 목록과 원본을 IN에 전달, 저장 공간도 자동 생성 |
+| 대시보드 폴링 | IN에서 머신을 검색, 머신 카드와 센서 항목을 자동 구성 |
 
-## 설치 및 첫 테스트
+머신/센서별로 코드나 고정 목록을 수정할 필요가 없습니다. 센서는 AE가 아니며 머신도 컨테이너로 표현합니다. 실제 물리 센서의 USB·무선 연결 탐지/드라이버는 포함하지 않습니다. 현재는 JSON 어댑터가 읽은 `machine_id`와 `sensors`로 장치 인식을 모사합니다.
 
-다운로드한 파일을 모두 같은 디렉터리에 두세요. 다음 예시는 기존 프로젝트 아래 apps_split에 압축을 푼 경우입니다. 기존 apps/quietfix.py를 덮어쓸 필요는 없습니다.
+## 리소스 경로
+
+기본 수집기 ID는 `collector-01`입니다. 머신 컨테이너 이름에는 기존 리소스와 충돌하지 않도록 `machine-` 접두사를 붙입니다.
+
+| 위치 | 리소스 예시 |
+|---|---|
+| MN 수집기 AE | `<MN_BASE>/collector-01` |
+| MN 머신 컨테이너 | `<MN_BASE>/collector-01/machine-machine-03` |
+| MN 원본 CIN | 위 컨테이너의 `telemetry` 아래 |
+| MN 센서 목록 CIN | 위 컨테이너의 `metadata` 아래 |
+| MN 분석 결과 CIN | `<MN_BASE>/analyzer/results` 아래 |
+| IN 원본/목록 | `<IN_BASE>/archive/collector-01/machine-machine-03/{telemetry,metadata}` |
+| IN 분석 결과 CIN | `<IN_BASE>/archive/results` 아래 |
+
+IN에서도 수집기 ID를 경로에 포함하므로 서로 다른 수집기에 같은 머신 ID가 있어도 구분합니다. 분석과 알림 역시 `(collector_id, machine_id, sample_id)`로 연결합니다. 머신이 다른 수집기로 이동하면 별도 등록으로 취급합니다.
+
+새 telemetry/results 컨테이너는 각각 CIN 최대 1,000개, metadata는 최신 1개를 보관합니다. 기존 컨테이너의 설정을 덮어쓰지 않습니다. 센서 목록은 과거 등록 센서를 합쳐 보존하며 자동 삭제하지 않습니다.
+
+## 적용 및 실행
+
+실행 중인 기존 분리 앱 4개(수집기·분석기·전달기·대시보드)를 Ctrl+C로 중지하고 저장소를 갱신합니다. 기존 통합본도 동시에 실행하지 마세요. 기존 CSE는 계속 실행합니다.
 
 ```bash
-cd ~/MPL-QuietFix/quietfix_type_c
-mkdir -p apps_split
-# 다운로드한 ZIP을 apps_split에 압축 해제한 후:
+git pull --ff-only
 source session.env
+export QF_COLLECTOR_ID=collector-01
 .venv/bin/python -m pip install -r apps_split/requirements.txt
+# 선택 사항: 공통 리소스를 미리 준비. 각 앱도 필요한 리소스를 자동 생성합니다.
 .venv/bin/python apps_split/setup_resources.py
-.venv/bin/python apps_split/collector_ae.py --dataset apps_split/test_data.json --interval 1 --cycles 1 --replay-id test01
-.venv/bin/python apps_split/analyzer_ae.py --once
-.venv/bin/python apps_split/forwarder_ae.py --once
-.venv/bin/python apps_split/dashboard.py
 ```
 
-VM 브라우저에서 http://127.0.0.1:8090/api 를 열어 machine별 telemetry/analysis의 sample_id가 같은지 확인합니다. `/`는 웹 화면입니다. 마지막 행은 두 설비 모두 회복 상태이므로 최종 화면에는 normal이 표시됩니다. 이상 판정을 보려면 아래처럼 순차 전송 중 화면을 보거나 IN archive/results의 전체 기록을 조회하세요.
+각 터미널에서 저장소 디렉터리로 이동하고 `source session.env`를 실행한 뒤 아래 명령을 하나씩 실행합니다. 기본 ID가 아닌 수집기는 그 터미널에서 `export QF_COLLECTOR_ID=gateway-west`처럼 지정하세요.
 
-## 실행 중 흐름 관찰
-
-각 터미널에서 프로젝트 디렉터리로 이동하고 `source session.env`를 먼저 실행하세요.
-
-터미널 1:
 ```bash
 .venv/bin/python apps_split/analyzer_ae.py
-```
-터미널 2:
-```bash
 .venv/bin/python apps_split/forwarder_ae.py
-```
-터미널 3:
-```bash
 .venv/bin/python apps_split/dashboard.py
-```
-터미널 4:
-```bash
-.venv/bin/python apps_split/collector_ae.py --dataset apps_split/test_data.json --interval 8 --replay-id test02
+.venv/bin/python apps_split/collector_ae.py --dataset apps_split/test_data_expanded.json --interval 5 --replay-id dynamic01
 ```
 
-collector의 SENT → analyzer의 ANALYZED → forwarder의 FORWARDED에서 같은 sample_id를 추적합니다. 대시보드는 3초마다 조회하며 분석 결과가 아직 전달되지 않았으면 waiting_for_analysis를 표시합니다. 종료는 각 터미널에서 Ctrl+C. 같은 역할은 한 번에 한 프로세스만 실행하세요. Windows에서 보려면 기존 SSH 포트 전달을 이용하거나, VM에서 `dashboard.py --host 0.0.0.0`으로 실행 후 VM_IP:8090으로 접속합니다. 기본값은 VM 로컬만 수신합니다.
+대시보드: http://127.0.0.1:8090/ (`/api`는 프로그램용 JSON).
 
-## 반복 전송과 현재 시각 (v2)
+`test_data_expanded.json`에는 머신 1·2, 신규 머신 3, 머신 3에 뒤늦게 추가되는 압력 센서, 압력 센서만 있는 머신 4가 들어 있습니다. 머신 3은 4개 센서의 이상 상태에서 5개 센서의 회복 상태로 바뀝니다. 마지막 머신 4는 미판정입니다. 목록을 반복하므로 센서 추가 전 샘플에서는 압력 센서가 ‘이번 샘플 미수신’으로 보일 수 있습니다.
 
-기본 실행은 5초 간격으로 1→2→…→10→1→…을 무한 반복합니다. Ctrl+C로 중지합니다.
+한 바퀴만 보내려면 `--cycles 1`, 같은 데이터셋을 처음부터 다시 보내려면 새로운 `--replay-id`를 지정합니다. 같은 ID와 파일은 재시작 시 중단 위치부터 이어갑니다. 기본은 무한 반복이며 전송 직전에 UTC 시각을 생성합니다. 실패한 행은 같은 ID·시각으로 재시도합니다.
 
-```bash
-.venv/bin/python apps_split/collector_ae.py --interval 5 --replay-id loop01
+JSON 파일은 수집기 시작 시 읽습니다. 파일에 머신/센서를 추가한 경우 **수집기만 재시작**하면 됩니다. 분석기·전달기·대시보드는 실행 중인 채 새 목록을 다음 폴링에 반영합니다. 실제 드라이버를 연결할 때는 `resource_registry.publish(client, sample)`에 같은 형식의 샘플을 넘깁니다.
+
+## JSON 형식
+
+기존 `test_data.json`의 `temperature_c`, `vibration_rms_mm_s`, `current_a` 형식도 지원합니다. 새 센서/동종 센서 여러 개는 다음 형식을 사용하세요.
+
+```json
+[
+  {
+    "machine_id": "machine-03",
+    "machine_name": "기계 3",
+    "sensors": [
+      {"sensor_id": "motor-temp", "type": "temperature", "label": "모터 온도", "value": 65, "unit": "°C"},
+      {"sensor_id": "bearing-temp", "type": "temperature", "label": "베어링 온도", "value": 78, "unit": "°C"},
+      {"sensor_id": "pressure", "type": "pressure", "label": "압력", "value": 2.4, "unit": "bar"}
+    ]
+  }
+]
 ```
 
-한 바퀴만 보낼 때는 `--cycles 1`, 두 바퀴는 `--cycles 2`를 추가합니다. cycles는 해당 replay-id에서 누적 목표 회차이며 재시작할 때마다 추가하는 회차 수가 아닙니다. 같은 replay-id 재실행은 중단 지점부터 이어갑니다. 처음부터 다시 하려면 새 replay-id를 지정하세요.
+각 행은 **한 머신의 현재 센서 스냅샷**입니다. 센서별 이벤트를 한 행씩 보내는 형식이 아닙니다. ID는 영문·숫자로 시작하는 영문·숫자·`-`·`_` 1~64자이며, 센서 ID는 머신 안에서 중복되면 안 됩니다. 값은 유한한 숫자입니다. `sensors`가 있으면 기존 평면 필드 대신 이를 사용합니다. `collector_id`, `sample_id`, `timestamp`, `simulated`는 수집기가 생성합니다.
 
-각 행을 보내기 직전에 UTC 현재 시각을 timestamp에 넣습니다. JSON에 timestamp가 있어도 덮어쓰며 없어도 됩니다. cycle(1부터), dataset_index(0부터), sequence(0부터)를 함께 기록합니다. 회차가 바뀌면 sample_id도 달라져 CSE에 새 데이터로 저장됩니다. timestamp는 최초 전송 시도 시각이며 CSE 도착 시각은 아닙니다. 재시도 시에는 응답 유실에 따른 중복 생성을 막기 위해 저장된 sample_id와 timestamp를 유지합니다.
+목록에 등록됐지만 이번 스냅샷에 빠진 센서는 값을 `—`, 상태를 ‘이번 샘플 미수신’으로 표시합니다. 이전 측정값을 현재 값처럼 재사용하지 않습니다. 센서의 종류·단위가 바뀌면 새 센서 ID 사용을 권장합니다.
 
-첫 샘플은 즉시 전송하며 이후 정상 통신에서는 전송 시작 사이를 5초로 맞춥니다. 네트워크 지연·장애가 길면 그 이상 걸릴 수 있으며 실패한 행이 성공하기 전에는 다음 행으로 넘어가지 않습니다. 중단·재시작 시 간격 타이머는 새로 시작합니다.
+## 분석과 화면
 
-v1 체크포인트와 충돌하지 않도록 v2 상태 키를 사용합니다. 업그레이드 첫 실행은 1번부터 시작합니다. state/의 pending에는 전송 대기 데이터까지 보관하므로 임의 삭제하지 마세요. 상태를 삭제하면 중복 방지 보장이 사라집니다.
+| 센서 종류 / 단위 | 판정 |
+|---|---|
+| `temperature` / `°C` | 75 이상이면 abnormal |
+| `vibration_rms` / `mm/s` | 7 이상이면 abnormal |
+| 그 외 종류 또는 다른 단위 | unassessed(미판정). 저장·전달·표시는 수행 |
 
-## JSON 데이터셋
+같은 머신의 동종 센서도 각각 판정합니다. 하나라도 이상이면 머신은 ABNORMAL, 판정 가능한 센서가 모두 정상이면 NORMAL입니다. 미판정 센서가 함께 있으면 문구로 표시하고, 판정 가능한 센서가 하나도 없으면 머신도 ‘미판정’입니다. 전류·압력 등에 임의 기준을 추가하지 않았습니다. AI 모델은 없습니다.
 
-`test_data.json`은 10행입니다. 두 설비의 정상 → 기계 2 이상 → 회복 순서이며 한 행씩 전송합니다. 각 행은 필수 필드 machine_id, temperature_c, vibration_rms_mm_s, current_a를 포함합니다. timestamp는 전송 직전에 생성하며 전송 간격은 --interval로 지정합니다. 테스트 데이터가 시뮬레이션임을 simulated=true로 표시합니다.
+기존 카드 UI, 현재 시각, 이상 시 붉은 테두리, 알림 최대 10개를 유지합니다. 알림에는 수집기와 이상 센서 이름도 표시합니다. 같은 분석 샘플은 중복 등록하지 않으며 알림은 서버 메모리만 사용합니다. 재시작 시 IN에 보존된 결과에서 최근 알림을 구성합니다. 대시보드는 3초마다, 분석·전달은 기본 2초마다 조회하므로 즉시 동시에 바뀌지는 않습니다.
 
-샘플 판정은 temperature_c >= 75 또는 vibration_rms_mm_s >= 7이면 abnormal, 그 외 normal입니다. current_a는 저장하되 현재 판정에 사용하지 않습니다. AI 모델 구현이 아닙니다.
+## 호환성과 상태 파일
 
-## 재시작·재전송
+기존 `<MN_BASE>/collector-01/telemetry`, `collector-02/telemetry`, IN의 직접 머신 컨테이너는 삭제하지 않습니다. 새 앱은 라벨이 붙은 v3 머신만 처리/표시하며 **기존 원본 데이터의 자동 이관은 하지 않습니다**. 새 수집기를 실행하면 새 경로에 데이터가 쌓입니다. 공유 results에 남은 이전 이상 이력은 기존 알림으로 표시될 수 있습니다.
 
-- dataset 내용과 replay-id가 같으면 진행 위치부터 이어 보냅니다. 기본 무한 반복에서는 계속 다음 회차를 보냅니다. 유한 cycles 목표를 완료한 실행은 종료합니다.
-- 새 테스트 실행은 --replay-id test03처럼 새 이름을 지정합니다.
-- sample_id는 데이터셋 파일 내용·replay-id·전체 순번(반복 회차 포함)으로 생성합니다. 입력 JSON의 sample_id는 source_sample_id로 보관합니다. JSON 파일의 공백만 바꿔도 새로운 데이터셋으로 인식합니다.
-- CIN 이름을 sample_id로 결정하여 응답 유실 후 재시도 시 중복 생성을 막습니다. 처리 성공 후에만 체크포인트를 저장합니다.
-- state/는 진행 상태이므로 보존하세요. 실제 장치를 분리하면 각 앱과 공용 모듈을 필요한 장치에 복사하고 환경변수 주소를 변경합니다. 각 장치의 state/는 로컬에 둡니다.
-- MN/IN DB를 초기화했으면 기존 체크포인트가 그 초기화를 알 수 없으므로 모든 앱을 중지하고 새 QF_STATE_DIR를 지정한 다음 리소스 설정과 새 replay-id로 시작합니다.
+수집기 상태 파일은 `state/collector-<수집기ID>.sqlite3`, 샘플/체크포인트 키는 v3로 구분합니다. 따라서 업그레이드 첫 실행은 기존 데이터셋도 처음부터 전송합니다. 분석기와 전달기는 기존 SQLite를 재사용하되 v3 키로 구분합니다. `.venv`, `session.env`, `state/`, 실행 DB는 Git에 올리지 않습니다. CSE DB를 초기화했다면 앱을 모두 중지한 뒤 새 `QF_STATE_DIR`와 replay-id를 사용하세요.
 
-## 기존 환경과의 연결
+여러 수집기는 서로 다른 `QF_COLLECTOR_ID`를 사용해야 합니다. 같은 수집기 ID의 프로세스를 동시에 여러 개 실행하지 마세요. 실제 배포에서는 앱별 권한/ACP와 인증이 필요하며 현재 CAdmin 설정은 개발용입니다. 수집기/전달기가 신규 리소스를 만들 권한, 분석기/대시보드가 등록 리소스를 검색·조회할 권한이 있어야 합니다.
 
-QF_MN_URL/QF_MN_BASE/QF_IN_URL은 기존 session.env를 사용합니다. IN_BASE 기본값은 quietfix-in, IN_URL 기본값은 http://127.0.0.1:9090입니다. QF_LOCAL_INSECURE=1은 기존 로컬 Sandbox 자체서명 TLS 테스트용입니다.
-
-리소스 경로는 기존과 같습니다:
-- MN: <MN_BASE>/collector-01/telemetry, collector-02/telemetry, analyzer/results
-- IN: quietfix-in/archive/machine-01, machine-02, results
-
-forwarder가 실제 콘텐츠를 복사합니다. Mcc 등록만으로 데이터가 자동 복제되는 것은 아닙니다. setup은 기존 ACP를 수정하지 않고 신규 리소스는 기존 ACME 권한 설정을 상속합니다. 현재 기본 CAdmin은 개발용이며 장치별 배포에서는 AE별 Originator/ACP와 인증을 별도로 구성해야 합니다.
-
-## 범위와 한계
-
-이 버전은 소규모 데이터셋 검증용 폴링 구현입니다. /la 한 건만 처리하지 않고 보존된 CIN을 검색하므로 전송 후 분석을 실행해도 여러 샘플을 처리합니다. 신규 컨테이너 보존 개수는 1000개이고 검색 상한은 10000입니다. CSE가 별도로 결과 수를 제한하거나 처리 전에 데이터를 삭제하면 누락될 수 있습니다. 장기·대량 운용에는 검색 페이지 처리, 보존 정책, 구독/알림 및 장애 복구를 추가해야 합니다. 전달·분석·화면은 비동기이므로 순간적으로 결과가 대기 상태일 수 있습니다.
-
-이 파일들이 실제 VM의 서비스나 MEC 앱으로 자동 설치되는 것은 아닙니다. 우선 기존 VM에서 위 명령으로 독립 프로세스를 실행하고 이후 각 역할별 서비스/컨테이너로 배치할 수 있습니다.
-
-## 대시보드 카드 UI 업데이트
-
-대시보드는 머신별 독립 카드에 온도(°C), 진동 RMS(mm/s), 전류(A), 측정 전송 시각과 분석 방식을 표시합니다. 현재 시각은 브라우저 현지 시간으로 매초 갱신합니다. 같은 sample_id의 분석 결과가 abnormal이면 카드 테두리가 붉게 표시되고 NORMAL/ABNORMAL 배지가 바뀝니다. 데이터나 분석 결과가 아직 없으면 대기 상태를 표시하며 통신 오류 시 마지막 조회 화면을 유지하고 상단에 오류를 표시합니다.
-
-오른쪽 알림 목록은 IN-CSE에 전달된 새 abnormal 분석 샘플마다 한 건씩 등록합니다. 정상→이상 전환만을 기록하는 방식이 아니므로 연속 이상 샘플도 각각 등록됩니다. 같은 machine_id/sample_id는 반복 조회해도 중복 등록하지 않습니다. 새 알림이 들어오면 최신순으로 최대 10개만 유지하며 오래된 알림은 제거합니다. 알림 자체는 서버 메모리에만 저장하고 DB를 추가하지 않습니다. 브라우저 새로고침은 서버 목록을 유지하며 대시보드 서버를 재시작하면 IN-CSE에 보존된 결과에서 목록을 다시 구성합니다. 현재 비정상인 카드가 정상으로 회복해도 과거 알림은 남습니다.
-
-서버가 3초마다 조회한 결과를 캐시하여 여러 브라우저가 같은 상태와 알림 목록을 공유합니다. IN-CSE 기록 검색 자체는 기존 소규모 폴링 방식이며 별도 대량 처리 최적화는 포함하지 않습니다.
-
-이번 UI만 적용하려면 dashboard.py를 교체하고 실행 중인 대시보드를 Ctrl+C로 종료한 후 다시 실행합니다. 다른 AE나 CSE는 재시작할 필요가 없습니다.
+## 검증과 한계
 
 ```bash
-cd ~/MPL-QuietFix/quietfix_type_c
-source session.env
-.venv/bin/python apps_split/dashboard.py
+python3 -m unittest discover -s tests -v
 ```
 
-VM 브라우저에서 http://127.0.0.1:8090/ 를 여세요. /api는 프로그램용 JSON 응답을 유지합니다.
+로컬 HTTP oneM2M 테스트 서버로 등록 → 분석 → IN 전달 → 대시보드 API 데이터 구성을 검증합니다. 실제 ACME/MEC/물리 센서 연동 테스트를 대체하지 않습니다. 검증 범위는 `VALIDATION.txt`에 기록합니다. 소규모 폴링 프로토타입이며 검색 상한 10,000개와 CSE 보존 설정에 따라 미처리 데이터가 누락될 수 있습니다. 장기·대량 운용, 등록 해제, 센서별 개별 이벤트 수집, 핫 리로드는 별도 범위입니다.
+
+## 파일 역할
+
+| 파일 | 책임 |
+|---|---|
+| `collector_ae.py` / `sensor_simulator.py` | 수집기 AE 등록·JSON 입력·머신/센서 등록·전송 |
+| `device_model.py` | 센서 스키마 검증, 기존 형식 변환, 센서 판정 규칙 |
+| `resource_registry.py` | AE/컨테이너 준비, 머신/센서 목록, 동적 검색 |
+| `analyzer_ae.py` | 등록된 머신 조회·샘플별 분석 |
+| `forwarder_ae.py` | 머신/센서 목록·원본·분석 결과를 IN에 복사 |
+| `dashboard.py` | IN만 조회·동적 카드/센서 항목·알림 |
+| `onem2m_client.py` | 공용 HTTP 및 oneM2M 요청 |
+| `worker_state.py` | SQLite에 로컬 진행 상태·전송 대기 기록 |
+| `setup_resources.py` | 선택적인 공통 리소스 초기화 |

@@ -11,11 +11,7 @@ ORIGIN = os.getenv('QF_ORIGIN', 'CAdmin')
 VERIFY_TLS = os.getenv('QF_LOCAL_INSECURE') != '1'
 POLL_SECONDS = float(os.getenv('QF_POLL_SECONDS', '2'))
 TIMEOUT = float(os.getenv('QF_HTTP_TIMEOUT', '15'))
-MACHINES = ('machine-01', 'machine-02')
-def telemetry(machine):
-    if machine not in MACHINES:
-        raise ValueError(f'Unsupported machine: {machine}')
-    return f'{MN_BASE}/collector-{machine[-2:]}/telemetry'
+COLLECTOR_ID = os.getenv('QF_COLLECTOR_ID', 'collector-01')
 def require_mn():
     if not MN_BASE:
         raise SystemExit('QF_MN_BASE is missing. Run: source session.env')
