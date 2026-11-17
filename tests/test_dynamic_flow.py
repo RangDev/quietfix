@@ -294,6 +294,25 @@ class DynamicFlow(unittest.TestCase):
             self.assertEqual(len(latest_group(client)),2)
             self.assertEqual(len(dashboard.snapshot()['machines']),3)
 
+    def test_adaptive_cli_end_to_end(self):
+        data={'duration_seconds':.1,'frames':[
+            {'at_seconds':0,'machine_id':'m1','temperature_c':40},
+            {'at_seconds':0,'machine_id':'m2','temperature_c':45},
+            {'at_seconds':.03,'machine_id':'m1','temperature_c':80},
+            {'at_seconds':.06,'machine_id':'m1','temperature_c':40}]}
+        dataset=Path(self.tmp.name)/'timeline.json';dataset.write_text(json.dumps(data))
+        self.run_app('collector_ae.py','--dataset',str(dataset),'--cycles','1',
+                     '--measure-period','.01','--normal-period','.05','--abnormal-period','.01')
+        self.pipeline()
+        samples=list(Client(self.url).records('mn/collector-01/machine-m1/telemetry'))
+        self.assertIn('abnormal_enter',[s['send_reason'] for s in samples])
+        self.assertIn('recovered',[s['send_reason'] for s in samples])
+        self.assertEqual(len(dashboard.snapshot()['machines']),2)
+        before=copy.deepcopy(self.server.resources)
+        self.run_app('collector_ae.py','--dataset',str(dataset),'--cycles','1',
+                     '--measure-period','.01','--normal-period','.05','--abnormal-period','.01')
+        self.assertEqual(before,self.server.resources)
+
     def test_alert_limit_and_cached_error(self):
         results=[{'collector_id':'g','machine_id':'m','sample_id':str(i),
                   'timestamp':f'{i:03}','status':'abnormal'} for i in range(15)]

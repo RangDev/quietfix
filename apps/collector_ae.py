@@ -1,5 +1,7 @@
 """Read the dataset sequentially and publish to MN-CSE. No dashboard or AI."""
 import argparse
+import json
+from pathlib import Path
 import logging
 import math
 import time
@@ -12,11 +14,30 @@ from resource_registry import ensure_ae, publish
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--dataset', default=str(c.ROOT/'test_data.json'))
+    p.add_argument('--dataset')
+    p.add_argument('--mode', choices=['adaptive','replay'])
+    p.add_argument('--measure-period', type=float, default=c.MEASURE_PERIOD)
+    p.add_argument('--normal-period', type=float, default=c.NORMAL_PERIOD)
+    p.add_argument('--abnormal-period', type=float, default=c.ABNORMAL_PERIOD)
+    p.add_argument('--outbox-limit', type=int, default=c.OUTBOX_LIMIT)
     p.add_argument('--replay-id', default='default')
-    p.add_argument('--interval', type=float, default=5)
+    p.add_argument('--interval', type=float, help='Legacy replay row interval; implies replay mode')
     p.add_argument('--cycles', type=int, default=0, help='0: repeat forever; N: stop after N total cycles')
     a = p.parse_args()
+    mode = a.mode or ('replay' if a.interval is not None else 'adaptive')
+    if a.mode is None and a.interval is None and a.dataset and isinstance(json.loads(Path(a.dataset).read_text()), list):
+        mode = 'replay'
+    if mode == 'adaptive' and a.interval is not None:
+        p.error('--interval is for replay; use --measure-period for adaptive')
+    a.dataset = a.dataset or str(c.ROOT/('test_data_timeline.json' if mode=='adaptive' else 'test_data.json'))
+    c.require_mn()
+    identifier(c.COLLECTOR_ID)
+    if mode == 'adaptive':
+        if a.cycles < 0: p.error('--cycles must be nonnegative')
+        from adaptive_collector import run
+        run(a)
+        return
+    a.interval = 5 if a.interval is None else a.interval
     if not math.isfinite(a.interval) or a.interval < 0:
         p.error('--interval must be finite and nonnegative')
     if a.cycles < 0:

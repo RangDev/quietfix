@@ -54,3 +54,7 @@ def sensor_status(sensor):
     if rule is None or sensor['unit'] != rule[0]:
         return 'unassessed'
     return 'abnormal' if sensor['value'] >= rule[1] else 'normal'
+
+def machine_status(sensors):
+    statuses = {sensor_status(s) for s in sensors}
+    return 'abnormal' if 'abnormal' in statuses else 'normal' if 'normal' in statuses else 'unassessed'
