@@ -1,10 +1,9 @@
-"""Independent polling AE: consume MN telemetry and persist rule results."""
+"""Independent analysis AE: consume MN telemetry and persist rule results."""
 import argparse
-import logging
-import time
 import config as c
 from onem2m_client import Client
 from worker_state import State
+from event_worker import run
 from device_model import normalize, sensor_status
 from resource_registry import discover_machines, ensure_analyzer
 
@@ -33,16 +32,7 @@ def main():
     a = p.parse_args()
     c.require_mn()
     client, state = Client(c.MN_URL), State('analyzer')
-    while True:
-        try:
-            step(client, state)
-        except Exception:
-            if a.once:
-                raise
-            logging.exception('Analysis failed; retrying')
-        if a.once:
-            return
-        time.sleep(max(c.POLL_SECONDS, 0.1))
+    run('analyzer', client, lambda: step(client, state), a.once)
 if __name__ == '__main__':
     try:
         main()

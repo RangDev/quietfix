@@ -8,6 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import config as c
 from onem2m_client import Client, OneM2MError
 from resource_registry import discover_machines, latest_or_none
+from group_queries import latest_group
 PAGE = """<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QuietFix · 설비 모니터</title>
 <style>
@@ -71,10 +72,13 @@ def snapshot():
             raise
         registered = []
     by_sample = {(r.get('collector_id'), r['machine_id'], r['sample_id']): r for r in results}
+    grouped = latest_group(client) if registered else {}
     machines = []
     for machine in registered:
         info = {k: machine[k] for k in ('collector_id', 'machine_id', 'machine_name', 'sensors')}
-        sample = latest_or_none(client, machine['path']+'/telemetry')
+        sample = grouped.get((machine['collector_id'], machine['machine_id']))
+        if sample is None:
+            sample = latest_or_none(client, machine['path']+'/telemetry')
         if sample is None:
             machines.append({**info, 'state': 'waiting_for_data'})
             continue

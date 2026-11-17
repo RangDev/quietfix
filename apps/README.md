@@ -128,3 +128,23 @@ python3 -m unittest discover -s tests -v
 | `onem2m_client.py` | 공용 HTTP 및 oneM2M 요청 |
 | `worker_state.py` | SQLite에 로컬 진행 상태·전송 대기 기록 |
 | `setup_resources.py` | 선택적인 공통 리소스 초기화 |
+
+## 구독·알림 및 그룹 최신값 조회
+
+분석기와 전달기는 HTTP 알림으로 깨어나 보존된 미처리 샘플을 처리할 수 있습니다. 알림은 처리 시작 신호이며, 실제 데이터는 CSE에서 조회합니다. 기존 SQLite 중복 방지를 유지하고 30초마다 전체 보완 조회를 하므로 알림 누락 시에도 CSE에 남은 데이터를 처리합니다. 이미 삭제된 데이터까지 복구하지는 못합니다. 새 머신 발견·구독 생성도 이 보완 주기에 수행하며, 구독 전 들어온 샘플은 조회로 처리합니다.
+
+`session.env`에 **MN-CSE 컨테이너에서 도달할 수 있는 VM 주소**를 지정하세요. 다음 VM_IP는 실제 주소로 바꿔야 합니다.
+
+```bash
+export QF_ANALYZER_NOTIFY_URL=http://VM_IP:8091/notify
+export QF_FORWARDER_NOTIFY_URL=http://VM_IP:8092/notify
+export QF_RECONCILE_SECONDS=30
+```
+
+이후 각 터미널에서 환경을 다시 읽고 기존 명령으로 분석기·전달기를 재시작합니다. 기본 수신 주소는 0.0.0.0, 포트는 각각 8091·8092입니다. 포트 변경은 `QF_ANALYZER_NOTIFY_PORT`, `QF_FORWARDER_NOTIFY_PORT`와 URL을 함께 수정하세요. MN 컨테이너 안의 127.0.0.1은 VM에서 실행하는 앱을 가리키지 않습니다. 해당 포트에 접근할 수 있어야 하고 구독 생성 권한이 필요합니다. 수신기는 구독 생성 전에 시작되며 CSE의 검증 알림에도 응답합니다. URL을 변경하면 다음 구독 확인에서 갱신합니다.
+
+URL을 지정하지 않으면 경고 로그를 남기고 기존 `QF_POLL_SECONDS` 간격의 폴링을 사용합니다. URL을 지정했지만 구독 생성이 실패하면 로그를 남기고 30초 보완 조회는 계속합니다. `--once`는 수신 서버나 구독 없이 한 차례 처리합니다. 알림 모드에서는 같은 역할을 한 프로세스로 실행하세요. 알림 수신 포트는 개발 환경의 신뢰할 수 있는 네트워크에만 노출하세요.
+
+분석기는 각 머신 telemetry를, 전달기는 각 머신 telemetry와 MN analyzer/results를 구독합니다. 전달기는 IN의 `archive/telemetryGroup`(ty=9)을 자동 생성·갱신하며, 모든 머신의 telemetry 컨테이너를 멤버로 유지합니다. 대시보드는 `GET <IN_BASE>/archive/telemetryGroup/fopt/la`로 최신 CIN들을 일괄 조회합니다. 그룹이 아직 없거나 일부 멤버가 비어 있으면 해당 머신만 개별 조회합니다. 분석 결과는 같은 sample_id로 연결하며 그룹 조회가 분석기·전달기의 전체 샘플 처리를 대체하지 않습니다. 대시보드는 3초 갱신을 유지합니다.
+
+그룹은 전달기가 관리하므로 대시보드는 IN을 읽기만 합니다. CSE 내부에서는 멤버별로 요청을 수행하며 같은 측정 시각이나 원자적 스냅샷을 보장하지 않습니다. 그룹 생성·갱신이 실패하면 전달기는 오류를 기록하고 데이터 전달을 계속합니다. 이 기능은 별도 DB·MQTT 브로커 없이 HTTP로 동작합니다.

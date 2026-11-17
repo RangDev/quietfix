@@ -15,3 +15,11 @@ COLLECTOR_ID = os.getenv('QF_COLLECTOR_ID', 'collector-01')
 def require_mn():
     if not MN_BASE:
         raise SystemExit('QF_MN_BASE is missing. Run: source session.env')
+
+# Advertised URLs must be reachable FROM the MN-CSE container.
+NOTIFY_HOST = os.getenv('QF_NOTIFY_HOST', '0.0.0.0')
+ANALYZER_NOTIFY_PORT = int(os.getenv('QF_ANALYZER_NOTIFY_PORT', '8091'))
+FORWARDER_NOTIFY_PORT = int(os.getenv('QF_FORWARDER_NOTIFY_PORT', '8092'))
+ANALYZER_NOTIFY_URL = os.getenv('QF_ANALYZER_NOTIFY_URL', '')
+FORWARDER_NOTIFY_URL = os.getenv('QF_FORWARDER_NOTIFY_URL', '')
+RECONCILE_SECONDS = float(os.getenv('QF_RECONCILE_SECONDS', '30'))

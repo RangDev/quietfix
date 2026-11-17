@@ -22,6 +22,9 @@ from onem2m_client import Client
 from resource_registry import publish, discover_machines
 from analyzer_ae import analyze
 import dashboard
+from event_worker import Notifications, subscribe
+from group_queries import sync_group, latest_group
+import requests
 
 class CSEHandler(BaseHTTPRequestHandler):
     def log_message(self, *args):
@@ -48,7 +51,17 @@ class CSEHandler(BaseHTTPRequestHandler):
             uris = [key for key, value in resources.items() if key.startswith(path+'/')
                     and value['ty'] == ty and (lbl is None or lbl in value.get('lbl', []))]
             return self.reply(200, {'m2m:uril': uris})
+        if path.endswith('/fopt/la'):
+            group=resources.get(path[:-8])
+            if group is None:
+                return self.reply(404,{})
+            responses=[]
+            for member in group['mid']:
+                children=[v for k,v in resources.items() if k.rsplit('/',1)[0]==member.strip('/') and v['ty']==4]
+                responses.append({'rsc':2000,'pc':{'m2m:cin':children[-1]}} if children else {'rsc':4004})
+            return self.reply(200,{'m2m:agr':{'m2m:rsp':responses}})
         if path.endswith('/la'):
+
             parent = path[:-3]
             uris = [key for key, value in resources.items() if key.rsplit('/', 1)[0] == parent and value['ty'] == 4]
             if not uris:
@@ -57,7 +70,7 @@ class CSEHandler(BaseHTTPRequestHandler):
         if path not in resources:
             return self.reply(404, {})
         resource = resources[path]
-        kind = {2: 'm2m:ae', 3: 'm2m:cnt', 4: 'm2m:cin', 5: 'm2m:cb'}[resource['ty']]
+        kind = {2: 'm2m:ae', 3: 'm2m:cnt', 4: 'm2m:cin', 5: 'm2m:cb', 9: 'm2m:grp', 23: 'm2m:sub'}[resource['ty']]
         self.reply(200, {kind: resource})
 
     def do_POST(self):
@@ -65,18 +78,35 @@ class CSEHandler(BaseHTTPRequestHandler):
         resources = self.server.resources
         payload = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
         kind, attrs = next(iter(payload.items()))
-        ty = { 'm2m:ae': 2, 'm2m:cnt': 3, 'm2m:cin': 4 }[kind]
+        ty = { 'm2m:ae': 2, 'm2m:cnt': 3, 'm2m:cin': 4, 'm2m:grp':9, 'm2m:sub':23 }[kind]
         if parent not in resources:
             return self.reply(404, {})
         target = parent+'/'+attrs['rn']
         if target in resources:
             return self.reply(409, {})
+        if ty == 23:
+            for url in attrs['nu']:
+                requests.post(url,json={'m2m:sgn':{'vrq':True}},timeout=2).raise_for_status()
         resources[target] = {**attrs, 'ty': ty}
         if ty == 4:
             children = [key for key, value in resources.items() if key.rsplit('/',1)[0] == parent and value['ty'] == 4]
             for key in children[:-resources[parent].get('mni',1000)]:
                 del resources[key]
         self.reply(201, {kind: resources[target]})
+        if ty == 4:
+            for key,value in list(resources.items()):
+                if key.rsplit('/',1)[0]==parent and value['ty']==23:
+                    for url in value['nu']:
+                        requests.post(url,json={'m2m:sgn':{'sur':key,'nev':{'net':3,'rep':{'m2m:cin':resources.get(target,attrs)}}}},timeout=2)
+
+    def do_PUT(self):
+        path=self.path.strip('/')
+        if path not in self.server.resources:
+            return self.reply(404,{})
+        payload=json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+        kind,attrs=next(iter(payload.items()))
+        self.server.resources[path].update(attrs)
+        self.reply(200,{kind:self.server.resources[path]})
 
 class DynamicFlow(unittest.TestCase):
     def setUp(self):
@@ -203,6 +233,66 @@ class DynamicFlow(unittest.TestCase):
             for worker in workers:
                 worker.terminate()
                 worker.communicate(timeout=5)
+
+    def test_live_notification_wakes_analyzer_before_reconcile_deadline(self):
+        import socket
+        with socket.socket() as sock:
+            sock.bind(('127.0.0.1',0))
+            port=sock.getsockname()[1]
+        client=Client(self.url)
+        sensor=SensorSimulator(APPS/'test_data_expanded.json')
+        first=sensor.read_measurements(0)
+        publish(client,first)
+        env={**self.env,'QF_ANALYZER_NOTIFY_URL':f'http://127.0.0.1:{port}/notify',
+             'QF_ANALYZER_NOTIFY_PORT':str(port),'QF_NOTIFY_HOST':'127.0.0.1','QF_RECONCILE_SECONDS':'30'}
+        worker=subprocess.Popen([sys.executable,str(APPS/'analyzer_ae.py')],env=env,
+                                stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,text=True)
+        def wait_until(check):
+            deadline=time.monotonic()+5
+            while time.monotonic()<deadline:
+                if check(): return
+                time.sleep(.02)
+            self.fail('Notification processing timed out before 30s fallback')
+        def has_result(sid):
+            return any(v['ty']==4 and k.startswith('mn/analyzer/results/') and
+                       json.loads(v['con'])['sample_id']==sid for k,v in list(self.server.resources.items()))
+        try:
+            wait_until(lambda:has_result(first['sample_id']))
+            second=sensor.read_measurements(5)
+            publish(client,second)
+            wait_until(lambda:has_result(second['sample_id']))
+        finally:
+            worker.terminate()
+            worker.communicate(timeout=5)
+
+    def test_subscriptions_verification_wakeup_and_dynamic_group(self):
+        client=Client(self.url)
+        sensor=SensorSimulator(APPS/'test_data_expanded.json')
+        publish(client,sensor.read_measurements(0))
+        with Notifications('127.0.0.1',0) as receiver:
+            url=f'http://127.0.0.1:{receiver.server.server_port}/notify'
+            subscribe(client,'analyzer',url)
+            self.assertFalse(receiver.wake.is_set())  # verification is acknowledged, not processed
+            publish(client,sensor.read_measurements(1))
+            subscribe(client,'analyzer',url)  # newly discovered machine gets a subscription
+            publish(client,sensor.read_measurements(6))
+            self.assertTrue(receiver.wake.wait(2))
+            self.pipeline()
+            group=latest_group(client)
+            self.assertEqual(len(group),2)
+            self.assertEqual(group[('collector-01','machine-02')]['sequence'],6)
+            publish(client,sensor.read_measurements(2))
+            self.pipeline()
+            self.assertEqual(len(latest_group(client)),3)
+            # Repeated group reconciliation must update members without duplicates.
+            sync_group(client)
+            members=self.server.resources['in/archive/telemetryGroup']['mid']
+            self.assertEqual(len(members),len(set(members)))
+            # Empty member is a per-member error, not a failure of the whole response.
+            del self.server.resources[next(k for k,v in self.server.resources.items()
+                if k.startswith('in/archive/collector-01/machine-machine-01/telemetry/') and v['ty']==4)]
+            self.assertEqual(len(latest_group(client)),2)
+            self.assertEqual(len(dashboard.snapshot()['machines']),3)
 
     def test_alert_limit_and_cached_error(self):
         results=[{'collector_id':'g','machine_id':'m','sample_id':str(i),
