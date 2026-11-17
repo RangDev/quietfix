@@ -35,24 +35,26 @@ IN에서도 수집기 ID를 경로에 포함하므로 서로 다른 수집기에
 
 ## 적용 및 실행
 
+폴더명이 `apps_split`에서 `apps`로 변경되었습니다. 기본 상태 경로를 사용하던 환경은 앱을 모두 중지한 뒤, Git 갱신 후 남아 있는 `apps_split/state/`를 `apps/state/`로 옮기면 진행 상태를 이어갈 수 있습니다. 대상 상태 폴더가 이미 있다면 덮어쓰지 마세요. `QF_STATE_DIR`를 별도 지정했다면 기존 경로를 유지합니다. 서비스/스크립트의 실행 경로도 `apps/`로 수정하세요.
+
 실행 중인 기존 분리 앱 4개(수집기·분석기·전달기·대시보드)를 Ctrl+C로 중지하고 저장소를 갱신합니다. 기존 통합본도 동시에 실행하지 마세요. 기존 CSE는 계속 실행합니다.
 
 ```bash
 git pull --ff-only
 source session.env
 export QF_COLLECTOR_ID=collector-01
-.venv/bin/python -m pip install -r apps_split/requirements.txt
+.venv/bin/python -m pip install -r apps/requirements.txt
 # 선택 사항: 공통 리소스를 미리 준비. 각 앱도 필요한 리소스를 자동 생성합니다.
-.venv/bin/python apps_split/setup_resources.py
+.venv/bin/python apps/setup_resources.py
 ```
 
 각 터미널에서 저장소 디렉터리로 이동하고 `source session.env`를 실행한 뒤 아래 명령을 하나씩 실행합니다. 기본 ID가 아닌 수집기는 그 터미널에서 `export QF_COLLECTOR_ID=gateway-west`처럼 지정하세요.
 
 ```bash
-.venv/bin/python apps_split/analyzer_ae.py
-.venv/bin/python apps_split/forwarder_ae.py
-.venv/bin/python apps_split/dashboard.py
-.venv/bin/python apps_split/collector_ae.py --dataset apps_split/test_data_expanded.json --interval 5 --replay-id dynamic01
+.venv/bin/python apps/analyzer_ae.py
+.venv/bin/python apps/forwarder_ae.py
+.venv/bin/python apps/dashboard.py
+.venv/bin/python apps/collector_ae.py --dataset apps/test_data_expanded.json --interval 5 --replay-id dynamic01
 ```
 
 대시보드: http://127.0.0.1:8090/ (`/api`는 프로그램용 JSON).

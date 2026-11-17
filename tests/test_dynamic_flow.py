@@ -13,7 +13,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 
-APPS = Path(__file__).resolve().parents[1] / 'apps_split'
+APPS = Path(__file__).resolve().parents[1] / 'apps'
 sys.path.insert(0, str(APPS))
 import config as c
 from device_model import normalize
