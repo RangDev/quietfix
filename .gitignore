@@ -1,0 +1,12 @@
+session.env
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+state/
+*.sqlite*
+*.db
+*.log

@@ -1,0 +1,62 @@
+[
+  {
+    "machine_id": "machine-01",
+    "temperature_c": 46,
+    "vibration_rms_mm_s": 2,
+    "current_a": 3
+  },
+  {
+    "machine_id": "machine-02",
+    "temperature_c": 47,
+    "vibration_rms_mm_s": 2,
+    "current_a": 3
+  },
+  {
+    "machine_id": "machine-01",
+    "temperature_c": 46,
+    "vibration_rms_mm_s": 2,
+    "current_a": 3
+  },
+  {
+    "machine_id": "machine-02",
+    "temperature_c": 47,
+    "vibration_rms_mm_s": 2,
+    "current_a": 3
+  },
+  {
+    "machine_id": "machine-01",
+    "temperature_c": 46,
+    "vibration_rms_mm_s": 2,
+    "current_a": 3
+  },
+  {
+    "machine_id": "machine-02",
+    "temperature_c": 82,
+    "vibration_rms_mm_s": 9,
+    "current_a": 7
+  },
+  {
+    "machine_id": "machine-01",
+    "temperature_c": 46,
+    "vibration_rms_mm_s": 2,
+    "current_a": 3
+  },
+  {
+    "machine_id": "machine-02",
+    "temperature_c": 82,
+    "vibration_rms_mm_s": 9,
+    "current_a": 7
+  },
+  {
+    "machine_id": "machine-01",
+    "temperature_c": 46,
+    "vibration_rms_mm_s": 2,
+    "current_a": 3
+  },
+  {
+    "machine_id": "machine-02",
+    "temperature_c": 47,
+    "vibration_rms_mm_s": 2,
+    "current_a": 3
+  }
+]
