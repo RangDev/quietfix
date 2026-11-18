@@ -41,3 +41,6 @@ def role_origin(role):
     if origin == ADMIN_ORIGIN:
         raise ValueError('Runtime role must not use the administrator origin')
     return origin
+
+# Optional typed latest-value projection; CIN history remains unchanged.
+FLEX_ENABLED = os.getenv('QF_FLEX_ENABLED') == '1'

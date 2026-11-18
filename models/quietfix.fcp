@@ -1,0 +1,69 @@
+[
+  {
+    "type": "qf:sensorReading",
+    "lname": "quietfixSensorReading",
+    "cnd": "org.quietfix.sensorReading.v1",
+    "attributes": [
+      {
+        "sname": "sensorId",
+        "lname": "sensorId",
+        "type": "string",
+        "car": "1"
+      },
+      {
+        "sname": "sensorType",
+        "lname": "sensorType",
+        "type": "string",
+        "car": "1"
+      },
+      {
+        "sname": "label",
+        "lname": "label",
+        "type": "string",
+        "car": "1"
+      },
+      {
+        "sname": "unit",
+        "lname": "unit",
+        "type": "string",
+        "car": "1"
+      },
+      {
+        "sname": "value",
+        "lname": "value",
+        "type": "float",
+        "car": "1"
+      },
+      {
+        "sname": "sampleId",
+        "lname": "sampleId",
+        "type": "string",
+        "car": "1"
+      },
+      {
+        "sname": "timestamp",
+        "lname": "timestamp",
+        "type": "string",
+        "car": "1"
+      },
+      {
+        "sname": "collectorId",
+        "lname": "collectorId",
+        "type": "string",
+        "car": "1"
+      },
+      {
+        "sname": "machineId",
+        "lname": "machineId",
+        "type": "string",
+        "car": "1"
+      },
+      {
+        "sname": "machineName",
+        "lname": "machineName",
+        "type": "string",
+        "car": "1"
+      }
+    ]
+  }
+]

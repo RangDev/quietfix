@@ -22,6 +22,9 @@ def step(client, state):
             key = 'v3:'+machine['collector_id']+':'+machine['machine_id']+':'+sample['sample_id']
             if state.has(key):
                 continue
+            if c.FLEX_ENABLED:
+                from flex_model import with_typed_readings
+                sample = with_typed_readings(sample, machine)
             result = analyze(sample)
             client.put(results, result)
             state.mark(key)

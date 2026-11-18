@@ -62,10 +62,17 @@ def register_machine(client, parent, sample):
 def publish(client, sample):
     parent = ensure_ae(client, c.MN_BASE, identifier(sample['collector_id']))
     path = register_machine(client, parent, sample)
+    if c.FLEX_ENABLED:
+        from flex_model import publish_readings
+        publish_readings(client, path, sample)
     client.put(path+'/telemetry', sample)
     return path
 
 def discover_machines(client, base):
+    if c.FLEX_ENABLED:
+        from flex_model import discover
+        yield from discover(client, base)
+        return
     # Use labels so unrelated containers and legacy resources are left untouched.
     query = urlencode({'fu': 1, 'ty': 3, 'lbl': MACHINE_LABEL, 'drt': 1, 'lim': 10000})
     result = client.call('GET', base+'?'+query)

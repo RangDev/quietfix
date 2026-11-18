@@ -9,7 +9,7 @@ CREATE, UPDATE, ALL = 1, 4, 63
 
 def policy_ref(base, name):
     # Each gateway retains its own write policy when another is provisioned.
-    if name == 'sensors':
+    if name in ('sensors', 'sensors-fcnt'):
         name += '-'+c.COLLECTOR_ID
     return base+'/qf-acp-'+name
 
@@ -24,12 +24,14 @@ def policies():
     if len({co, an, fw, db}) != 4:
         raise ValueError('Each runtime role must have a distinct origin')
     return {
-        'sensors': [rule(co, READ), rule(co, CREATE, [3,4]),
+        'sensors': [rule(co, READ), rule(co, CREATE, [3,4,28]),
                     rule(an, READ), rule(fw, READ),
                     rule(an, CREATE, [23]), rule(fw, CREATE, [23])],
+        'sensors-fcnt': [rule(co, READ | UPDATE), rule(an, READ), rule(fw, READ)],
+        'archive-fcnt': [rule(fw, READ | UPDATE), rule(db, READ)],
         'analysis': [rule(an, READ), rule(an, CREATE, [4]),
                      rule(fw, READ), rule(fw, CREATE, [23])],
-        'archive': [rule(fw, READ), rule(fw, CREATE, [3,4,9]), rule(db, READ)],
+        'archive': [rule(fw, READ), rule(fw, CREATE, [3,4,9,28]), rule(db, READ)],
         'group': [rule(fw, READ | UPDATE), rule(db, READ)],
         'analyzer-sub': [rule(an, READ | UPDATE)],
         'forwarder-sub': [rule(fw, READ | UPDATE)],
@@ -51,20 +53,23 @@ def attach(client, path, name, base):
     wanted = [policy_ref(base, name)]
     if attrs.get('acpi') != wanted:
         # oneM2M requires acpi to be the sole attribute of an UPDATE.
-        client.call('PUT', path, {kind: {'acpi': wanted}})
+        # An AE without explicit ACPI can bootstrap it only as its owner.
+        # Subsequent changes use the administrator granted by our PVS.
+        owner = attrs.get('aei') if kind == 'm2m:ae' and not attrs.get('acpi') else None
+        client.call('PUT', path, {kind: {'acpi': wanted}}, origin=owner)
     if kind == 'm2m:grp' and attrs.get('macp') != [policy_ref(base, 'group')]:
         client.call('PUT', path, {kind: {'macp': [policy_ref(base, 'group')]}})
 
 def protect_tree(client, base, root, default):
     # CINs inherit access from their containers; do not mutate immutable CINs.
     attach(client, root, default, base)
-    for ty in (3,9,23):
+    for ty in (3,9,23,28):
         query = urlencode({'fu':1,'ty':ty,'drt':1,'lim':10000})
         uris = client.call('GET', root+'?'+query).get('m2m:uril', [])
         if len(uris) >= 10000:
             raise RuntimeError('Discovery limit reached; migrate smaller subtrees before enabling ACP')
         for path in uris:
-            name = 'group' if ty == 9 else default
+            name = 'group' if ty == 9 else default+'-fcnt' if ty == 28 else default
             if ty == 23:
                 rn = next(iter(client.call('GET',path).values()))['rn']
                 name = {'qf-analyzer':'analyzer-sub', 'qf-forwarder':'forwarder-sub'}.get(rn)
@@ -107,8 +112,8 @@ def main():
         ensure_archive(central)
     finally:
         c.ACP_ENABLED = True
-    for client,base,names in [(mn,c.MN_BASE,['sensors','analysis','analyzer-sub','forwarder-sub','identity']),
-                              (central,c.IN_BASE,['archive','group','identity'])]:
+    for client,base,names in [(mn,c.MN_BASE,['sensors','sensors-fcnt','analysis','analyzer-sub','forwarder-sub','identity']),
+                              (central,c.IN_BASE,['archive','archive-fcnt','group','identity'])]:
         for name in names:
             provision_policy(client,base,name,specs[name])
     protect_tree(mn,c.MN_BASE,c.MN_BASE+'/'+c.COLLECTOR_ID,'sensors')

@@ -49,3 +49,10 @@ v4 머신별 적응형 수집:
   explicit policies on dynamic containers/subscriptions and group macp covered.
 - Tests use HTTP doubles; no live ACME permission enforcement claimed.
 - Live deploy check: python apps/verify_access.py --run (see apps/ACP.md).
+
+2026-11-18 improvement 2 FlexContainer
+- Actual ACME 2025.11: two isolated in-memory CSEs, typed sensor create/update,
+  FCNT discovery, four machines, analysis, forwarding, group fan-out, dashboard PASS.
+- Actual role-based FCNT update denial: analyzer/dashboard HTTP 403 PASS.
+- Seven new model consistency/validation tests; existing data and rule logic retained.
+- The live integration test is opt-in; user VM deployment is not claimed.

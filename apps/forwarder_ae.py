@@ -24,6 +24,9 @@ def step(mn, central, state):
             key = 'v3:'+source+':'+sample['sample_id']
             if state.has(key):
                 continue
+            if c.FLEX_ENABLED and source.endswith('/telemetry'):
+                from flex_model import publish_readings
+                publish_readings(central, target.rsplit('/',1)[0], sample)
             central.put(target, sample)
             state.mark(key)
             print('FORWARDED', target, sample['sample_id'], flush=True)

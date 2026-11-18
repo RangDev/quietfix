@@ -183,3 +183,7 @@ source session.env
 ## 선택적 역할별 ACP
 
 기존 개발·데이터셋 흐름은 기본 설정에서 유지됩니다. CSE 권한을 적용한 뒤 `QF_ACP_ENABLED=1`로 실행하면 앱별 Originator와 제한된 ACP를 사용합니다. 적용·라이브 검증·복원 및 보안 범위는 [ACP.md](ACP.md)를 따르세요. 새 게이트웨이 AE는 관리자 초기 설정이 필요하며 등록된 게이트웨이 아래의 머신은 자동 등록됩니다.
+
+## 선택적 FlexContainer 모델
+
+`QF_FLEX_ENABLED=1`로 센서 타입·단위·값을 명시한 모델을 생성하고 FCNT 질의 기반 발견을 사용합니다. 양쪽 CSE의 모델 설치와 ACP 재적용이 필요합니다. [FLEX.md](FLEX.md)에 계획·구현·검증·전환 절차를 정리했습니다.

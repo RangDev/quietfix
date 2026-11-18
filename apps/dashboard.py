@@ -84,6 +84,9 @@ def snapshot():
         if sample is None:
             machines.append({**info, 'state': 'waiting_for_data'})
             continue
+        if c.FLEX_ENABLED:
+            from flex_model import with_typed_readings
+            sample = with_typed_readings(sample, machine)
         matching = by_sample.get((machine['collector_id'], machine['machine_id'], sample['sample_id']))
         machines.append({**info, 'telemetry': sample, 'analysis': matching,
                          'state': 'ready' if matching else 'waiting_for_analysis'})
