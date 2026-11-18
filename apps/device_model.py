@@ -41,6 +41,10 @@ def normalize(row):
             if not isinstance(text, str) or len(text) > 120:
                 raise ValueError(f'{sid}: {field} must be a string of at most 120 characters')
             result[field] = text
+        import config as c
+        if c.SEMANTIC_ENABLED:
+            from semantics import canonical
+            result=canonical(result)
         normalized.append(result)
     row['sensors'] = normalized
     name = row.get('machine_name', row['machine_id'])

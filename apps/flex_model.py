@@ -39,10 +39,17 @@ def publish_readings(client, machine_path, sample):
         changes = {k:v for k,v in attrs.items() if k not in ('rn','cnd','lbl','acpi')}
         if any(existing.get(k) != v for k,v in changes.items()):
             client.call('PUT', machine_path+'/'+rn, {KIND:changes})
+        if c.SEMANTIC_ENABLED:
+            from semantics import publish_descriptor
+            publish_descriptor(client,machine_path+'/'+rn,attrs)
 
 def discover(client, base):
     query=urlencode({'fu':1, 'ty':28, 'cnd':CND, 'lbl':LABEL, 'drt':1, 'lim':10000})
-    uris=client.call('GET',base+'?'+query).get('m2m:uril',[])
+    if c.SEMANTIC_ENABLED:
+        from semantics import discover_paths
+        uris=discover_paths(client,base)
+    else:
+        uris=client.call('GET',base+'?'+query).get('m2m:uril',[])
     if len(uris)>=10000:
         raise RuntimeError('FCNT discovery limit reached; use a smaller subtree')
     machines={}

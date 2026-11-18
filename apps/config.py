@@ -52,3 +52,8 @@ MQTT_TOPIC_PREFIX = os.getenv('QF_MQTT_TOPIC_PREFIX', '').rstrip('/')
 MQTT_USERNAME = os.getenv('QF_MQTT_USERNAME', '')
 MQTT_PASSWORD = os.getenv('QF_MQTT_PASSWORD', '')
 MQTT_CA_FILE = os.getenv('QF_MQTT_CA_FILE')
+
+SEMANTIC_ENABLED = os.getenv('QF_SEMANTIC_ENABLED') == '1'
+
+if SEMANTIC_ENABLED and not FLEX_ENABLED:
+    raise ValueError('Semantic mode requires QF_FLEX_ENABLED=1')

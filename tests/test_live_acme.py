@@ -108,7 +108,7 @@ type=memory
                     log.seek(0);raise RuntimeError('ACME startup timeout: '+log.read())
                 for name,value in [(attr+'_URL',url),(attr+'_BASE',base)]:
                     pp=patch.object(c,name,value);pp.start();cls.patchers.append(pp)
-            for name,value in [('FLEX_ENABLED',True),('ACP_ENABLED',True),('ORIGIN','CAdmin'),('ADMIN_ORIGIN','CAdmin'),('COLLECTOR_ID','collector-01'),('MQTT_TOPIC_PREFIX',''),('MQTT_USERNAME',''),('MQTT_PASSWORD',''),('STATE',Path(cls.tmp.name)/'state')]:
+            for name,value in [('SEMANTIC_ENABLED',os.getenv('QF_RUN_SEMANTIC')=='1'),('FLEX_ENABLED',True),('ACP_ENABLED',True),('ORIGIN','CAdmin'),('ADMIN_ORIGIN','CAdmin'),('COLLECTOR_ID','collector-01'),('MQTT_TOPIC_PREFIX',''),('MQTT_USERNAME',''),('MQTT_PASSWORD',''),('STATE',Path(cls.tmp.name)/'state')]:
                 pp=patch.object(c,name,value);pp.start();cls.patchers.append(pp)
             if cls.mqtt_test:
                 for name,value in [('COLLECTOR_PROTOCOL','mqtt'),('MQTT_URL',f'mqtt://127.0.0.1:{cls.broker_port}'),('MQTT_CSE_ID','/id-mn')]:

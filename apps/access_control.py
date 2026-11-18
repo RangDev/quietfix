@@ -27,8 +27,8 @@ def policies():
         'sensors': [rule(co, READ), rule(co, CREATE, [3,4,28]),
                     rule(an, READ), rule(fw, READ),
                     rule(an, CREATE, [23]), rule(fw, CREATE, [23])],
-        'sensors-fcnt': [rule(co, READ | UPDATE), rule(an, READ), rule(fw, READ)],
-        'archive-fcnt': [rule(fw, READ | UPDATE), rule(db, READ)],
+        'sensors-fcnt': [rule(co, CREATE, [24]), rule(co, READ | UPDATE), rule(an, READ), rule(fw, READ)],
+        'archive-fcnt': [rule(fw, CREATE, [24]), rule(fw, READ | UPDATE), rule(db, READ)],
         'analysis': [rule(an, READ), rule(an, CREATE, [4]),
                      rule(fw, READ), rule(fw, CREATE, [23])],
         'archive': [rule(fw, READ), rule(fw, CREATE, [3,4,9,28]), rule(db, READ)],
@@ -63,13 +63,13 @@ def attach(client, path, name, base):
 def protect_tree(client, base, root, default):
     # CINs inherit access from their containers; do not mutate immutable CINs.
     attach(client, root, default, base)
-    for ty in (3,9,23,28):
+    for ty in (3,9,23,28,24):
         query = urlencode({'fu':1,'ty':ty,'drt':1,'lim':10000})
         uris = client.call('GET', root+'?'+query).get('m2m:uril', [])
         if len(uris) >= 10000:
             raise RuntimeError('Discovery limit reached; migrate smaller subtrees before enabling ACP')
         for path in uris:
-            name = 'group' if ty == 9 else default+'-fcnt' if ty == 28 else default
+            name = 'group' if ty == 9 else default+'-fcnt' if ty in (24,28) else default
             if ty == 23:
                 rn = next(iter(client.call('GET',path).values()))['rn']
                 name = {'qf-analyzer':'analyzer-sub', 'qf-forwarder':'forwarder-sub'}.get(rn)
