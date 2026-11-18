@@ -26,7 +26,31 @@ class LiveACME(unittest.TestCase):
         import acmecse
         cls.tmp=tempfile.TemporaryDirectory(); cls.procs=[];cls.logs=[]
         cls.patchers=[]
+        cls.mqtt_test=os.getenv('QF_RUN_MQTT')=='1'
+        cls.broker_port=None
         try:
+            if cls.mqtt_test:
+                with socket.socket() as s:
+                    s.bind(('127.0.0.1',0));cls.broker_port=s.getsockname()[1]
+                broker_code="""import asyncio,sys
+from amqtt.broker import Broker
+async def serve():
+    broker=Broker({'listeners':{'default':{'type':'tcp','bind':'127.0.0.1:'+sys.argv[1]}},'plugins':{'amqtt.plugins.authentication.AnonymousAuthPlugin':{'allow_anonymous':True}}})
+    await broker.start()
+    await asyncio.Event().wait()
+asyncio.run(serve())
+"""
+                log=open(Path(cls.tmp.name)/'broker.log','w+');cls.logs.append(log)
+                proc=subprocess.Popen([sys.executable,'-c',broker_code,str(cls.broker_port)],stdout=log,stderr=log)
+                cls.procs.append(proc)
+                for _ in range(100):
+                    try:
+                        with socket.create_connection(('127.0.0.1',cls.broker_port),timeout=.2):break
+                    except OSError:
+                        if proc.poll() is not None:
+                            log.seek(0);raise RuntimeError(log.read())
+                        time.sleep(.1)
+                else:raise RuntimeError('MQTT broker startup timeout')
             for base,attr in [('mn','MN'),('central','IN')]:
                 home=Path(cls.tmp.name)/base; (home/'init').mkdir(parents=True)
                 (home/'init'/'quietfix.fcp').write_bytes((Path(__file__).resolve().parents[1]/'models'/'quietfix.fcp').read_bytes())
@@ -65,11 +89,13 @@ listenIF=127.0.0.1
 [database]
 type=memory
 '''
+                if cls.mqtt_test and attr=='MN':
+                    config+=f'\n[mqtt]\nenable=true\naddress=127.0.0.1\nport={cls.broker_port}\n'
                 (home/'acme.ini').write_text(config)
                 log=open(home/'server.log','w+');cls.logs.append(log)
                 bootstrap="from acmecse.runtime.Configuration import Configuration; Configuration._print=staticmethod(print); Configuration._error=staticmethod(print); from acmecse.runtime.Logging import Logging; Logging.logErr=classmethod(lambda cls,*a,**k:print(a,k,flush=True)); from acmecse.__main__ import main; main()"
                 proc=subprocess.Popen([sys.executable,'-c',bootstrap,'--base-directory',str(home),'--headless',
-                    '--no-mqtt','--no-coap','--no-ws','--no-remote-cse','--log-level','debug'],stdout=log,stderr=log)
+                    '--mqtt' if cls.mqtt_test and attr=='MN' else '--no-mqtt','--no-coap','--no-ws','--no-remote-cse','--log-level','debug'],stdout=log,stderr=log)
                 cls.procs.append(proc)
                 for _ in range(100):
                     try:
@@ -82,8 +108,13 @@ type=memory
                     log.seek(0);raise RuntimeError('ACME startup timeout: '+log.read())
                 for name,value in [(attr+'_URL',url),(attr+'_BASE',base)]:
                     pp=patch.object(c,name,value);pp.start();cls.patchers.append(pp)
-            for name,value in [('FLEX_ENABLED',True),('ACP_ENABLED',True),('STATE',Path(cls.tmp.name)/'state')]:
+            for name,value in [('FLEX_ENABLED',True),('ACP_ENABLED',True),('ORIGIN','CAdmin'),('ADMIN_ORIGIN','CAdmin'),('COLLECTOR_ID','collector-01'),('MQTT_TOPIC_PREFIX',''),('MQTT_USERNAME',''),('MQTT_PASSWORD',''),('STATE',Path(cls.tmp.name)/'state')]:
                 pp=patch.object(c,name,value);pp.start();cls.patchers.append(pp)
+            if cls.mqtt_test:
+                for name,value in [('COLLECTOR_PROTOCOL','mqtt'),('MQTT_URL',f'mqtt://127.0.0.1:{cls.broker_port}'),('MQTT_CSE_ID','/id-mn')]:
+                    pp=patch.object(c,name,value);pp.start();cls.patchers.append(pp)
+            pp=patch.dict(os.environ,{'QF_COLLECTOR_ORIGIN':'Cqfcollector-01','QF_ANALYZER_ORIGIN':'Cqfanalyzer','QF_FORWARDER_ORIGIN':'Cqfforwarder','QF_DASHBOARD_ORIGIN':'Cqfdashboard'})
+            pp.start();cls.patchers.append(pp)
             # Provision actual AEs, ACPs and namespaces on the isolated CSEs.
             import access_control
             with patch.object(sys,'argv',['access_control.py','--apply']):access_control.main()
@@ -91,6 +122,8 @@ type=memory
             cls.tearDownClass();raise
     @classmethod
     def tearDownClass(cls):
+        from onem2m_client import close_collector_clients
+        close_collector_clients()
         for pp in reversed(cls.patchers):pp.stop()
         for proc in cls.procs:
             proc.terminate()
@@ -101,10 +134,49 @@ type=memory
     def test_typed_discovery_analysis_archive_dashboard_and_permissions(self):
         from sensor_simulator import SensorSimulator
         source=SensorSimulator(c.ROOT/'test_data_expanded.json','live-flex',c.COLLECTOR_ID)
-        collector=Client(c.MN_URL,c.role_origin('collector'))
+        from onem2m_client import collector_client
+        collector=collector_client() if self.mqtt_test else Client(c.MN_URL,c.role_origin('collector'))
         samples=[source.read_measurements(i) for i in range(len(source))]
-        for sample in samples:publish(collector,sample)
+        paths=[publish(collector,sample) for sample in samples]
+        # MQTT retransmission uses the same CIN name; it must not duplicate history.
+        publish(collector,samples[0])
+        retained=list(collector.records(paths[0]+'/telemetry'))
+        expected={s['sample_id'] for s in samples if s['machine_id']==samples[0]['machine_id']}
+        self.assertEqual({s['sample_id'] for s in retained},expected)
+        self.assertEqual(len(retained),len(expected))
         reader=Client(c.MN_URL,c.role_origin('analyzer'))
+        from event_worker import Notifications, subscribe
+        with Notifications('127.0.0.1',0) as notifications:
+            url=f'http://127.0.0.1:{notifications.server.server_address[1]}/notify'
+            subscribe(reader,'analyzer',url)
+            from datetime import datetime,timedelta
+            extra={**samples[0],'sample_id':'notify-'+samples[0]['sample_id'],
+                   'timestamp':(datetime.fromisoformat(samples[0]['timestamp'])+timedelta(seconds=1)).isoformat()}
+            publish(collector,extra)
+            self.assertTrue(notifications.wake.wait(3),'CIN creation notification not received')
+        if self.mqtt_test:
+            with self.assertRaises(OneM2MError) as raised:
+                collector.call('POST',c.MN_BASE+'/analyzer/results',{'m2m:cin':{'rn':'forbidden','con':'no'}},4)
+            self.assertEqual(raised.exception.status,403)
+            # A real broker outage must fail, then reconnect and resubscribe without rebuilding the client.
+            broker=self.procs[0];broker.terminate();broker.wait(5)
+            for _ in range(40):
+                if not collector.ready.is_set():break
+                time.sleep(.05)
+            self.assertFalse(collector.ready.is_set())
+            with patch.object(c,'TIMEOUT',.2):
+                with self.assertRaises(TimeoutError):collector.call('GET',c.MN_BASE+'/'+c.COLLECTOR_ID)
+            self.procs[0]=subprocess.Popen(broker.args,stdout=self.logs[0],stderr=self.logs[0])
+            self.assertTrue(collector.ready.wait(15),'MQTT client failed to reconnect')
+            # ACME also reconnects asynchronously; retry reads during its resubscription window.
+            for attempt in range(5):
+                try:
+                    with patch.object(c,'TIMEOUT',2):collector.call('GET',c.MN_BASE+'/'+c.COLLECTOR_ID)
+                    break
+                except TimeoutError:
+                    if attempt==4:raise
+            publish(collector,extra)
+
         machines=list(discover_machines(reader,c.MN_BASE))
         self.assertGreaterEqual(len(machines),3)
         for machine in machines:

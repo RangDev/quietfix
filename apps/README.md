@@ -187,3 +187,7 @@ source session.env
 ## 선택적 FlexContainer 모델
 
 `QF_FLEX_ENABLED=1`로 센서 타입·단위·값을 명시한 모델을 생성하고 FCNT 질의 기반 발견을 사용합니다. 양쪽 CSE의 모델 설치와 ACP 재적용이 필요합니다. [FLEX.md](FLEX.md)에 계획·구현·검증·전환 절차를 정리했습니다.
+
+## 선택적 수집기 MQTT 바인딩
+
+`QF_COLLECTOR_PROTOCOL=mqtt`로 수집기–MN-CSE 구간만 oneM2M MQTT 바인딩을 사용합니다. 사전 AE 등록과 ACP 모드, MQTT 브로커 및 ACME MQTT 설정이 필요합니다. [MQTT.md](MQTT.md)에 계획·구현·검증·실행 방법을 정리했습니다. 기본 HTTP 동작과 다른 앱의 HTTP 통신은 유지됩니다.

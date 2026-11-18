@@ -44,3 +44,11 @@ def role_origin(role):
 
 # Optional typed latest-value projection; CIN history remains unchanged.
 FLEX_ENABLED = os.getenv('QF_FLEX_ENABLED') == '1'
+
+COLLECTOR_PROTOCOL = os.getenv('QF_COLLECTOR_PROTOCOL', 'http').lower()
+MQTT_URL = os.getenv('QF_MQTT_URL', 'mqtt://127.0.0.1:1883')
+MQTT_CSE_ID = os.getenv('QF_MQTT_CSE_ID', '')
+MQTT_TOPIC_PREFIX = os.getenv('QF_MQTT_TOPIC_PREFIX', '').rstrip('/')
+MQTT_USERNAME = os.getenv('QF_MQTT_USERNAME', '')
+MQTT_PASSWORD = os.getenv('QF_MQTT_PASSWORD', '')
+MQTT_CA_FILE = os.getenv('QF_MQTT_CA_FILE')

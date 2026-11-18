@@ -56,3 +56,12 @@ v4 머신별 적응형 수집:
 - Actual role-based FCNT update denial: analyzer/dashboard HTTP 403 PASS.
 - Seven new model consistency/validation tests; existing data and rule logic retained.
 - The live integration test is opt-in; user VM deployment is not claimed.
+
+2026-11-18 improvement 3 oneM2M MQTT
+- Real amqtt 0.11.3 broker + ACME 2025.11 MN/IN integration: MQTT collector,
+  typed/CIN storage, HTTP analysis/forwarding, group fan-out and dashboard PASS.
+- Real CIN HTTP notification, MQTT duplicate retry without extra CIN, denied
+  cross-role write, broker outage timeout/restart/reconnect/resubscribe PASS.
+- Thirteen MQTT protocol/correlation/lifecycle tests added; no automatic HTTP fallback.
+- Local integration uses anonymous loopback MQTT, not production auth/TLS validation.
+- User VM broker and CSE configuration/deployment remain separate from this commit.

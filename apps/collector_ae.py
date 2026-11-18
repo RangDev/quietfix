@@ -6,7 +6,7 @@ import logging
 import math
 import time
 import config as c
-from onem2m_client import Client
+from onem2m_client import collector_client
 from sensor_simulator import SensorSimulator
 from worker_state import State
 from device_model import identifier
@@ -48,7 +48,7 @@ def main():
     state = State('collector-'+c.COLLECTOR_ID)
     key = 'v3:'+c.COLLECTOR_ID+':'+sensor.fingerprint+':'+a.replay_id
     index = state.position(key)
-    client = Client(c.MN_URL, c.role_origin('collector'))
+    client = collector_client()
     # AE registration is performed at startup, before the first measurement.
     while True:
         try:

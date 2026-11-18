@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 import config as c
 from device_model import normalize, machine_status
-from onem2m_client import Client
+from onem2m_client import collector_client
 from resource_registry import publish
 
 class Timeline:
@@ -94,7 +94,7 @@ class Store:
 
 def deliver(path,stop,notify,send=None):
     store=Store(path)
-    send=send or (lambda sample:publish(Client(c.MN_URL, c.role_origin('collector')),sample))
+    send=send or (lambda sample:publish(collector_client(),sample))
     try:
         while not stop.is_set():
             row=store.head()

@@ -61,3 +61,29 @@ class Client:
             yield self.content(self.call('GET', uri)['m2m:cin'])
     def latest(self, container):
         return self.content(self.call('GET', container+'/la')['m2m:cin'])
+
+# Collector transport selection is explicit; other applications remain HTTP.
+import atexit
+import threading
+_collector_clients = {}
+_collector_lock = threading.Lock()
+def collector_client():
+    if c.COLLECTOR_PROTOCOL == 'http':
+        return Client(c.MN_URL,c.role_origin('collector'))
+    if c.COLLECTOR_PROTOCOL != 'mqtt':
+        raise ValueError('QF_COLLECTOR_PROTOCOL must be http or mqtt')
+    if not c.ACP_ENABLED:
+        raise ValueError('MQTT collector requires QF_ACP_ENABLED=1 and pre-provisioned AEs')
+    from mqtt_client import MQTTClient
+    origin=c.role_origin('collector')
+    key=(c.MN_URL,origin,c.MQTT_URL,c.MQTT_CSE_ID,c.MQTT_TOPIC_PREFIX)
+    with _collector_lock:
+        if key not in _collector_clients:
+            _collector_clients[key]=MQTTClient(c.MN_URL,origin)
+        return _collector_clients[key]
+
+def close_collector_clients():
+    with _collector_lock:
+        clients=list(_collector_clients.values());_collector_clients.clear()
+    for client in clients:client.close()
+atexit.register(close_collector_clients)
