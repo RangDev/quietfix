@@ -78,3 +78,13 @@ Controlled handover improvement
 - Post-transfer sample triggered notification and was analyzed/forwarded centrally.
 - Shared-file Linux worker barrier and atomic routing tested; no automatic failure
   detector or multi-host migration is claimed.
+
+Grouped machine dashboard (2026-11-18)
+- Section configuration tests: default mapping, collector-scoped identity and
+  duplicate assignment rejection passed. Sensor input JSON is unchanged.
+- Full unittest discovery: 56 tests, 53 passed and 3 optional integrations skipped.
+- Separate opt-in Playwright Chromium test passed with mock HTTP API: grouped
+  cards hide readings; details show readings; selection survives refresh; keyboard
+  focus/close, query-error state and 390px mobile layout checked.
+- Desktop/mobile screenshots visually reviewed. compileall and diff --check passed.
+- No live user VM deployment or topology/node health monitoring is included.

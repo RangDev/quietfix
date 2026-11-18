@@ -199,3 +199,7 @@ source session.env
 - [Controlled MN-CSE transfer and retained-state restoration](HANDOVER.md)
 
 These are independently configured features. They are not automatically installed into the user VM.
+
+## 구역별 대시보드
+
+머신 카드는 정상·이상 등 상태만 표시하고 선택한 머신의 센서값·속성은 상세 패널에서 확인합니다. 구역 배정은 dashboard_sections.json 또는 QF_DASHBOARD_SECTIONS 설정으로 관리하며 기존 센서 JSON은 유지됩니다. [대시보드 안내](DASHBOARD.md)를 참고하세요. 노드·MEC 상태 화면은 추가하지 않았습니다.
