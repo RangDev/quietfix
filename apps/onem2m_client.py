@@ -61,6 +61,8 @@ class Client:
     def records(self, container):
         # Discover all retained CINs, rather than only /la (which can skip samples).
         result = self.call('GET', container+'?fu=1&ty=4&drt=1&lim=10000')
+        if len(result.get('m2m:uril', [])) >= 10000:
+            raise RuntimeError('CIN discovery limit reached; narrow the migration/reconciliation scope')
         for uri in result.get('m2m:uril', []):
             yield self.content(self.call('GET', uri)['m2m:cin'])
     def latest(self, container):

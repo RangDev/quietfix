@@ -9,6 +9,9 @@ from group_queries import sync_group
 from resource_registry import (discover_machines, ensure_archive, ensure_cnt,
                                ensure_analyzer, register_machine)
 
+from routing import guarded
+
+@guarded
 def step(mn, central, state):
     results = ensure_archive(central)
     archive = c.IN_BASE+'/archive'

@@ -59,6 +59,9 @@ def register_machine(client, parent, sample):
         client.put(metadata, catalog)
     return path
 
+from routing import guarded
+
+@guarded
 def publish(client, sample):
     parent = ensure_ae(client, c.MN_BASE, identifier(sample['collector_id']))
     path = register_machine(client, parent, sample)

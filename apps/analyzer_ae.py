@@ -15,6 +15,9 @@ def analyze(sample):
             'status': status, 'method': 'demo_threshold_rule', 'sensors': sensors,
             'coverage': 'partial' if 'unassessed' in statuses else 'complete'}
 
+from routing import guarded
+
+@guarded
 def step(client, state):
     results = ensure_analyzer(client)
     for machine in discover_machines(client, c.MN_BASE):

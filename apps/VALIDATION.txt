@@ -71,3 +71,10 @@ Authenticated transport improvement
   Originator spoofing, unmapped CN, missing client certificate and untrusted CA.
 - TLS MQTT broker integration with password and topic ACL checks is opt-in.
 - Production gateway backend isolation and user VM TLS installation are not claimed.
+
+Controlled handover improvement
+- Three actual ACME CSEs: failed target preserved source route; successful transfer
+  verified retained telemetry/results, rebuilt ACP/model resources and subscriptions.
+- Post-transfer sample triggered notification and was analyzed/forwarded centrally.
+- Shared-file Linux worker barrier and atomic routing tested; no automatic failure
+  detector or multi-host migration is claimed.

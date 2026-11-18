@@ -77,10 +77,10 @@ def protect_tree(client, base, root, default):
                     raise RuntimeError('Review unknown subscription before migration: '+path)
             attach(client, path, name, base)
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--apply', action='store_true', help='Apply ACPs to QuietFix resources on configured CSEs')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     c.require_mn()
     if not args.apply:
         parser.error('Use --apply after reading ACP.md; this modifies resource permissions')

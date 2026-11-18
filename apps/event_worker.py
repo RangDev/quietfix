@@ -49,6 +49,9 @@ class Notifications:
         self.server.server_close()
         self.thread.join()
 
+from routing import guarded
+
+@guarded
 def subscribe(client, role, url):
     paths = [m['path']+'/telemetry' for m in discover_machines(client, c.MN_BASE)]
     if role == 'forwarder':

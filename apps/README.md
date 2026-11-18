@@ -191,3 +191,11 @@ source session.env
 ## 선택적 수집기 MQTT 바인딩
 
 `QF_COLLECTOR_PROTOCOL=mqtt`로 수집기–MN-CSE 구간만 oneM2M MQTT 바인딩을 사용합니다. 사전 AE 등록과 ACP 모드, MQTT 브로커 및 ACME MQTT 설정이 필요합니다. [MQTT.md](MQTT.md)에 계획·구현·검증·실행 방법을 정리했습니다. 기본 HTTP 동작과 다른 앱의 HTTP 통신은 유지됩니다.
+
+## Authenticated transport, semantic discovery and controlled transfer
+
+- [Authenticated HTTPS/MQTTS and Originator/topic binding](../security/README.md)
+- [SAREF descriptors and explicit unit mapping](SEMANTICS.md)
+- [Controlled MN-CSE transfer and retained-state restoration](HANDOVER.md)
+
+These are independently configured features. They are not automatically installed into the user VM.

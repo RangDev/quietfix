@@ -51,7 +51,7 @@ asyncio.run(serve())
                             log.seek(0);raise RuntimeError(log.read())
                         time.sleep(.1)
                 else:raise RuntimeError('MQTT broker startup timeout')
-            for base,attr in [('mn','MN'),('central','IN')]:
+            for base,attr in [('mn','MN'),('central','IN')]+([('backup','TARGET')] if os.getenv('QF_RUN_HANDOVER')=='1' else []):
                 home=Path(cls.tmp.name)/base; (home/'init').mkdir(parents=True)
                 (home/'init'/'quietfix.fcp').write_bytes((Path(__file__).resolve().parents[1]/'models'/'quietfix.fcp').read_bytes())
                 with socket.socket() as s:
@@ -89,13 +89,13 @@ listenIF=127.0.0.1
 [database]
 type=memory
 '''
-                if cls.mqtt_test and attr=='MN':
+                if cls.mqtt_test and attr in ('MN','TARGET'):
                     config+=f'\n[mqtt]\nenable=true\naddress=127.0.0.1\nport={cls.broker_port}\n'
                 (home/'acme.ini').write_text(config)
                 log=open(home/'server.log','w+');cls.logs.append(log)
                 bootstrap="from acmecse.runtime.Configuration import Configuration; Configuration._print=staticmethod(print); Configuration._error=staticmethod(print); from acmecse.runtime.Logging import Logging; Logging.logErr=classmethod(lambda cls,*a,**k:print(a,k,flush=True)); from acmecse.__main__ import main; main()"
                 proc=subprocess.Popen([sys.executable,'-c',bootstrap,'--base-directory',str(home),'--headless',
-                    '--mqtt' if cls.mqtt_test and attr=='MN' else '--no-mqtt','--no-coap','--no-ws','--no-remote-cse','--log-level','debug'],stdout=log,stderr=log)
+                    '--mqtt' if cls.mqtt_test and attr in ('MN','TARGET') else '--no-mqtt','--no-coap','--no-ws','--no-remote-cse','--log-level','debug'],stdout=log,stderr=log)
                 cls.procs.append(proc)
                 for _ in range(100):
                     try:
@@ -106,6 +106,8 @@ type=memory
                         time.sleep(.1)
                 else:
                     log.seek(0);raise RuntimeError('ACME startup timeout: '+log.read())
+                if attr=='TARGET':
+                    cls.target_url=url;cls.target_base=base;continue
                 for name,value in [(attr+'_URL',url),(attr+'_BASE',base)]:
                     pp=patch.object(c,name,value);pp.start();cls.patchers.append(pp)
             for name,value in [('SEMANTIC_ENABLED',os.getenv('QF_RUN_SEMANTIC')=='1'),('FLEX_ENABLED',True),('ACP_ENABLED',True),('ORIGIN','CAdmin'),('ADMIN_ORIGIN','CAdmin'),('COLLECTOR_ID','collector-01'),('MQTT_TOPIC_PREFIX',''),('MQTT_USERNAME',''),('MQTT_PASSWORD',''),('STATE',Path(cls.tmp.name)/'state')]:
@@ -205,3 +207,35 @@ type=memory
             Client(c.IN_URL,c.role_origin('dashboard')).call('PUT',target['path']+'/sensor-'+target['sensors'][0]['sensor_id'],{KIND:{'value':999}})
         self.assertEqual(raised.exception.status,403)
 
+
+        if os.getenv('QF_RUN_HANDOVER')=='1':
+            from handover import transfer
+            from routing import atomic_write
+            from event_worker import Notifications,subscribe
+            route=Path(self.tmp.name)/'route.json'
+            atomic_write(route,{'url':c.MN_URL,'base':c.MN_BASE,'cse_id':'/id-mn'})
+            with Notifications('127.0.0.1',0) as receiver, patch.dict(os.environ,{'QF_ROUTE_FILE':str(route)}):
+                subscribe(reader,'analyzer',f'http://127.0.0.1:{receiver.server.server_address[1]}/notify')
+                # A failed target must not switch the shared route.
+                original=json.loads(route.read_text())
+                with self.assertRaises(Exception):
+                    with patch.object(c,'TIMEOUT',.2):transfer('http://127.0.0.1:1','absent','/id-absent')
+                self.assertEqual(json.loads(route.read_text()),original)
+                report=transfer(self.target_url,self.target_base,'/id-backup',c.MQTT_URL if self.mqtt_test else None)
+                self.assertEqual(report['phase'],'committed');self.assertEqual(report['missing_retained_samples'],0)
+                self.assertGreaterEqual(report['subscriptions'],1)
+                receiver.wake.clear()
+                new={**samples[0],'sample_id':'after-handover','timestamp':'2030-01-01T00:00:00+00:00'}
+                publish(collector,new)
+                self.assertTrue(receiver.wake.wait(3))
+                state=State('live-analyzer')
+                try:analyze_step(reader,state)
+                finally:state.db.close()
+                state=State('live-forwarder')
+                try:forward_step(mn,central,state)
+                finally:state.db.close()
+                view=dashboard.snapshot()
+                self.assertIn('after-handover',{r['sample_id'] for r in view['_results']})
+                self.assertEqual(c.MN_BASE,'backup')
+                archived=list(central.records(c.IN_BASE+'/archive/'+c.COLLECTOR_ID+'/machine-'+samples[0]['machine_id']+'/telemetry'))
+                self.assertEqual(len(archived),len({r['sample_id'] for r in archived}))
