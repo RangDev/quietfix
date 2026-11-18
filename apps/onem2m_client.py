@@ -17,8 +17,12 @@ class Client:
                    'X-M2M-RVI': '3', 'Accept': 'application/json'}
         if body is not None:
             headers['Content-Type'] = 'application/json' + (f';ty={ty}' if ty else '')
+        from transport_security import http_options
+        options=http_options(origin or self.origin)
+        if 'cert' in options and not self.url.startswith('https://'):
+            raise ValueError('Authenticated HTTP mode requires HTTPS')
         r = requests.request(method, self.url+'/'+path.lstrip('/'), headers=headers,
-                             json=body, timeout=c.TIMEOUT, verify=c.VERIFY_TLS)
+                             json=body, timeout=c.TIMEOUT, allow_redirects=False, **options)
         if not r.ok:
             raise OneM2MError(r)
         rsc = r.headers.get('X-M2M-RSC')

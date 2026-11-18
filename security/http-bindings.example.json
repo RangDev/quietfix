@@ -1,0 +1,1 @@
+{"collector": ["Cqfcollector-01"], "analyzer": ["Cqfanalyzer"], "forwarder": ["Cqfforwarder"], "dashboard": ["Cqfdashboard"], "admin": ["CAdmin", "Cqfcollector-01", "Cqfanalyzer", "Cqfforwarder", "Cqfarchive", "Cqfdashboard"]}

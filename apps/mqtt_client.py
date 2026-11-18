@@ -64,6 +64,9 @@ class MQTTClient(Client):
             raise ValueError('Use mqtt[s]://host[:port]; credentials belong in QF_MQTT_USERNAME/PASSWORD')
         if bool(c.MQTT_USERNAME)!=bool(c.MQTT_PASSWORD):
             raise ValueError('Set both MQTT username and password')
+        import os
+        if target.scheme=='mqtt' and (c.MQTT_USERNAME or os.getenv('QF_MQTT_CERT_FILE')):
+            raise ValueError('MQTT credentials require mqtts://')
         sender,receiver=topic_id(origin),topic_id(c.MQTT_CSE_ID)
         if any(x in c.MQTT_TOPIC_PREFIX for x in ('+','#','\x00')):
             raise ValueError('MQTT topic prefix must not contain wildcards')
@@ -81,7 +84,10 @@ class MQTTClient(Client):
         self.mqtt.reconnect_delay_set(min_delay=1,max_delay=15)
         if c.MQTT_USERNAME:self.mqtt.username_pw_set(c.MQTT_USERNAME,c.MQTT_PASSWORD)
         if target.scheme=='mqtts':
-            self.mqtt.tls_set(ca_certs=c.MQTT_CA_FILE,cert_reqs=ssl.CERT_REQUIRED)
+            import os
+            cert,key=os.getenv('QF_MQTT_CERT_FILE'),os.getenv('QF_MQTT_KEY_FILE')
+            if bool(cert)!=bool(key):raise ValueError('MQTT client certificate and key must be supplied together')
+            self.mqtt.tls_set(ca_certs=c.MQTT_CA_FILE,certfile=cert,keyfile=key,cert_reqs=ssl.CERT_REQUIRED)
         self.mqtt.connect_async(target.hostname,target.port or (8883 if target.scheme=='mqtts' else 1883),keepalive=60)
         self.mqtt.loop_start()
     def _connected(self,client,userdata,flags,reason,properties):

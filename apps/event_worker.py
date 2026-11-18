@@ -1,6 +1,7 @@
 """Notification wake-ups plus periodic retained-data reconciliation."""
 import json
 import logging
+import os
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import config as c
@@ -15,6 +16,10 @@ class Notifications:
                 pass
             def do_POST(self):
                 try:
+                    if os.getenv('QF_NOTIFY_CERT_FILE'):
+                        from transport_security import peer_name
+                        if peer_name(self.connection) not in os.getenv('QF_NOTIFY_PEERS','').split(','):
+                            self.send_error(403);return
                     size = int(self.headers.get('Content-Length', '0'))
                     if not 0 < size <= 1048576:
                         raise ValueError('Invalid body size')
@@ -31,6 +36,10 @@ class Notifications:
                 except (ValueError, KeyError, TypeError):
                     self.send_error(400)
         self.server = ThreadingHTTPServer((host, port), Handler)
+        if os.getenv('QF_NOTIFY_CERT_FILE'):
+            from transport_security import server_context
+            if not os.getenv('QF_NOTIFY_PEERS'):raise ValueError('Set QF_NOTIFY_PEERS for authenticated notifications')
+            self.server.socket=server_context(os.environ['QF_NOTIFY_CERT_FILE'],os.environ['QF_NOTIFY_KEY_FILE'],os.environ['QF_NOTIFY_CA_FILE']).wrap_socket(self.server.socket,server_side=True)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
     def __enter__(self):
         self.thread.start()

@@ -65,3 +65,9 @@ v4 머신별 적응형 수집:
 - Thirteen MQTT protocol/correlation/lifecycle tests added; no automatic HTTP fallback.
 - Local integration uses anonymous loopback MQTT, not production auth/TLS validation.
 - User VM broker and CSE configuration/deployment remain separate from this commit.
+
+Authenticated transport improvement
+- Real local mTLS HTTP gateway: accepted mapped certificate identity, rejected
+  Originator spoofing, unmapped CN, missing client certificate and untrusted CA.
+- TLS MQTT broker integration with password and topic ACL checks is opt-in.
+- Production gateway backend isolation and user VM TLS installation are not claimed.

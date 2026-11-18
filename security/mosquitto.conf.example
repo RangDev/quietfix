@@ -1,0 +1,9 @@
+# Replace paths and run broker as a user able to read its private key.
+listener 8883
+cafile /run/quietfix/ca.crt
+certfile /run/quietfix/broker.crt
+keyfile /run/quietfix/broker.key
+require_certificate true
+use_identity_as_username true
+allow_anonymous false
+acl_file /run/quietfix/mqtt.acl

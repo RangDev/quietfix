@@ -10,3 +10,7 @@ state/
 *.sqlite*
 *.db
 *.log
+*.key
+*.pem
+*.crt
+security/local/

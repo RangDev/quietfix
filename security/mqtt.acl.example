@@ -1,0 +1,11 @@
+# Certificate CNs are broker usernames. Change id-mn to actual CSE-ID.
+user Cqfcollector-01
+topic write /oneM2M/req/Cqfcollector-01/id-mn/json
+topic read /oneM2M/resp/Cqfcollector-01/id-mn/json
+user qf-cse
+topic read /oneM2M/req/+/id-mn/#
+topic read /oneM2M/reg_req/+/id-mn/#
+topic read /oneM2M/resp/id-mn/+/#
+topic write /oneM2M/resp/+/id-mn/#
+topic write /oneM2M/reg_resp/+/id-mn/#
+topic write /oneM2M/req/id-mn/+/#
