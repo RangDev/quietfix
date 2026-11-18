@@ -8,6 +8,10 @@ def sync_group(client):
     if not members:
         return
     attrs = {'rn': 'telemetryGroup', 'mt': 3, 'mnm': max(1000,len(members)), 'mid': members}
+    if c.ACP_ENABLED:
+        from access_control import policy_ref
+        attrs['acpi'] = [policy_ref(c.IN_BASE, 'group')]
+        attrs['macp'] = [policy_ref(c.IN_BASE, 'group')]
     path = c.IN_BASE+'/archive/telemetryGroup'
     current = client.ensure(c.IN_BASE+'/archive', 'm2m:grp', attrs, 9)['m2m:grp']
     if sorted(current.get('mid', [])) != members:

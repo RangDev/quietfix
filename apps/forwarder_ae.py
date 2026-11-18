@@ -36,7 +36,7 @@ def main():
     p.add_argument('--once', action='store_true')
     a = p.parse_args()
     c.require_mn()
-    mn, central, state = Client(c.MN_URL), Client(c.IN_URL), State('forwarder')
+    mn, central, state = Client(c.MN_URL, c.role_origin('forwarder')), Client(c.IN_URL, c.role_origin('forwarder')), State('forwarder')
     run('forwarder', mn, lambda: step(mn, central, state), a.once)
 if __name__ == '__main__':
     try:

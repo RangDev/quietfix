@@ -10,10 +10,18 @@ MACHINE_LABEL = 'quietfix-machine-v3'
 
 def ensure_ae(client, base, name):
     identifier(name)
+    if c.ACP_ENABLED:
+        client.call('GET', base+'/'+name)  # Admin provisions AEs before secure runtime.
+        return base+'/'+name
     client.ensure(base, 'm2m:ae', {'rn': name, 'api': 'NQuietFix', 'rr': False, 'srv': ['3']}, 2)
     return base+'/'+name
 
 def ensure_cnt(client, parent, name, **attrs):
+    if c.ACP_ENABLED:
+        from access_control import policy_ref
+        policy = 'archive' if parent.startswith(c.IN_BASE+'/archive') else ('analysis' if parent.startswith(c.MN_BASE+'/analyzer') else 'sensors')
+        base = c.IN_BASE if policy == 'archive' else c.MN_BASE
+        attrs['acpi'] = [policy_ref(base, policy)]
     client.ensure(parent, 'm2m:cnt', {'rn': name, 'mni': 1000, **attrs}, 3)
     return parent+'/'+name
 

@@ -63,7 +63,7 @@ function render(data){
 async function update(){try{const r=await fetch('/api',{cache:'no-store'});const d=await r.json();if(!r.ok)throw Error(d.error||'조회 실패');render(d);$('connection').className=d.error?'error':'';$('connection').textContent=d.error?'연결 오류 · 마지막 조회 데이터 표시':`IN-CSE 연결됨 · 마지막 조회 ${date(d.updated_at)}`}catch(e){$('connection').className='error';$('connection').textContent='연결 오류 · 마지막 조회 화면 유지'}finally{setTimeout(update,3000)}}update();
 </script></body></html>"""
 def snapshot():
-    client = Client(c.IN_URL)
+    client = Client(c.IN_URL, c.role_origin('dashboard'))
     # A dashboard can start before the forwarder provisions the archive.
     results = []
     try:

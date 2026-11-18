@@ -28,3 +28,16 @@ MEASURE_PERIOD = float(os.getenv('QF_MEASURE_PERIOD', '1'))
 NORMAL_PERIOD = float(os.getenv('QF_NORMAL_PERIOD', '5'))
 ABNORMAL_PERIOD = float(os.getenv('QF_ABNORMAL_PERIOD', '1'))
 OUTBOX_LIMIT = int(os.getenv('QF_OUTBOX_LIMIT', '10000'))
+
+# Opt-in access control: legacy development commands remain unchanged by default.
+ACP_ENABLED = os.getenv('QF_ACP_ENABLED') == '1'
+ADMIN_ORIGIN = os.getenv('QF_ADMIN_ORIGIN', ORIGIN)
+def role_origin(role):
+    if not ACP_ENABLED:
+        return ORIGIN
+    defaults = {'collector': 'Cqf'+COLLECTOR_ID, 'analyzer': 'Cqfanalyzer',
+                'forwarder': 'Cqfforwarder', 'dashboard': 'Cqfdashboard'}
+    origin = os.getenv('QF_'+role.upper()+'_ORIGIN', defaults[role])
+    if origin == ADMIN_ORIGIN:
+        raise ValueError('Runtime role must not use the administrator origin')
+    return origin

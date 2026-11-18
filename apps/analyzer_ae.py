@@ -31,7 +31,7 @@ def main():
     p.add_argument('--once', action='store_true')
     a = p.parse_args()
     c.require_mn()
-    client, state = Client(c.MN_URL), State('analyzer')
+    client, state = Client(c.MN_URL, c.role_origin('analyzer')), State('analyzer')
     run('analyzer', client, lambda: step(client, state), a.once)
 if __name__ == '__main__':
     try:

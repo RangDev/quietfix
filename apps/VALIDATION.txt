@@ -42,3 +42,10 @@ v4 머신별 적응형 수집:
 - 전송 실패 중 측정 진행, 안정적인 재전송 payload, 복구 후 대기열 소진 검증
 - 짧은 시간 기반 JSON으로 실제 collector CLI → MN → 분석 → IN → 대시보드 및 재시작 중복 방지 검증
 - 실제 센서/전력 소비/사용자 ACME 환경의 타이밍은 미검증
+
+2026-11-18 role-based ACP implementation
+- QF_ACP_ENABLED defaults to 0 to preserve existing development commands.
+- Policy definitions, distinct runtime origins, CREATE child-type restrictions,
+  explicit policies on dynamic containers/subscriptions and group macp covered.
+- Tests use HTTP doubles; no live ACME permission enforcement claimed.
+- Live deploy check: python apps/verify_access.py --run (see apps/ACP.md).

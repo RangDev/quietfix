@@ -48,7 +48,7 @@ def main():
     state = State('collector-'+c.COLLECTOR_ID)
     key = 'v3:'+c.COLLECTOR_ID+':'+sensor.fingerprint+':'+a.replay_id
     index = state.position(key)
-    client = Client(c.MN_URL)
+    client = Client(c.MN_URL, c.role_origin('collector'))
     # AE registration is performed at startup, before the first measurement.
     while True:
         try:

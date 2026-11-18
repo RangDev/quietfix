@@ -94,7 +94,7 @@ class Store:
 
 def deliver(path,stop,notify,send=None):
     store=Store(path)
-    send=send or (lambda sample:publish(Client(c.MN_URL),sample))
+    send=send or (lambda sample:publish(Client(c.MN_URL, c.role_origin('collector')),sample))
     try:
         while not stop.is_set():
             row=store.head()

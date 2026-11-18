@@ -47,6 +47,9 @@ def subscribe(client, role, url):
     for path in paths:
         name = 'qf-'+role
         attrs = {'rn': name, 'enc': {'net': [3]}, 'nu': [url], 'nct': 1}
+        if c.ACP_ENABLED:
+            from access_control import policy_ref
+            attrs['acpi'] = [policy_ref(c.MN_BASE, role+'-sub')]
         existing = client.ensure(path, 'm2m:sub', attrs, 23)['m2m:sub']
         if any(existing.get(k) != attrs[k] for k in ('nu', 'enc', 'nct')):
             client.call('PUT', path+'/'+name, {'m2m:sub': {k: attrs[k] for k in ('nu','enc','nct')}})
