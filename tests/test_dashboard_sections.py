@@ -7,7 +7,9 @@ class DashboardSections(unittest.TestCase):
     def test_default_grouping_and_unassigned(self):
         sections,mapping=section_settings()
         self.assertEqual(mapping[('collector-01','machine-01')]['section_id'],'a')
-        self.assertEqual(mapping[('collector-01','machine-04')]['section_id'],'b')
+        self.assertEqual(mapping[('collector-01','machine-04')]['section_id'],'a')
+        self.assertEqual(len(mapping),8)
+        self.assertEqual(mapping[('collector-01','machine-08')]['section_id'],'b')
         self.assertEqual(sections[-1]['id'],'unassigned')
     def test_same_machine_id_in_two_collectors_is_distinct(self):
         with tempfile.TemporaryDirectory() as tmp:

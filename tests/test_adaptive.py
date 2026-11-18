@@ -7,8 +7,13 @@ import time
 import unittest
 from adaptive_collector import Timeline, Store, deliver
 
-DATA=Path(__file__).resolve().parents[1]/'apps/test_data_timeline.json'
+DATA=Path(__file__).resolve().parents[1]/'test_data/test_data_dynamic_timeline.json'
 class Adaptive(unittest.TestCase):
+    def test_default_eight_machines_from_start(self):
+        timeline=Timeline(DATA.parent/'test_data_timeline.json')
+        self.assertEqual({r['machine_id'] for r in timeline.read(0)}, {f'machine-{i:02}' for i in range(1,9)})
+        self.assertEqual(len(timeline.read(39)),8)
+        self.assertEqual(len(timeline.read(40)),8)
     def test_machine_periods_transitions_and_restart(self):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'state.db'; store=Store(path); timeline=Timeline(DATA)

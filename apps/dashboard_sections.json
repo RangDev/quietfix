@@ -1,12 +1,48 @@
 {
   "sections": [
-    {"id": "a", "name": "A 구역", "machines": [
-      {"collector_id": "collector-01", "machine_id": "machine-01"},
-      {"collector_id": "collector-01", "machine_id": "machine-02"}
-    ]},
-    {"id": "b", "name": "B 구역", "machines": [
-      {"collector_id": "collector-01", "machine_id": "machine-03"},
-      {"collector_id": "collector-01", "machine_id": "machine-04"}
-    ]}
+    {
+      "id": "a",
+      "name": "A 구역",
+      "machines": [
+        {
+          "collector_id": "collector-01",
+          "machine_id": "machine-01"
+        },
+        {
+          "collector_id": "collector-01",
+          "machine_id": "machine-02"
+        },
+        {
+          "collector_id": "collector-01",
+          "machine_id": "machine-03"
+        },
+        {
+          "collector_id": "collector-01",
+          "machine_id": "machine-04"
+        }
+      ]
+    },
+    {
+      "id": "b",
+      "name": "B 구역",
+      "machines": [
+        {
+          "collector_id": "collector-01",
+          "machine_id": "machine-05"
+        },
+        {
+          "collector_id": "collector-01",
+          "machine_id": "machine-06"
+        },
+        {
+          "collector_id": "collector-01",
+          "machine_id": "machine-07"
+        },
+        {
+          "collector_id": "collector-01",
+          "machine_id": "machine-08"
+        }
+      ]
+    }
   ]
 }

@@ -88,3 +88,11 @@ Grouped machine dashboard (2026-11-18)
   focus/close, query-error state and 390px mobile layout checked.
 - Desktop/mobile screenshots visually reviewed. compileall and diff --check passed.
 - No live user VM deployment or topology/node health monitoring is included.
+
+Eight-machine defaults and dataset cleanup (2026-11-18)
+- Default adaptive timeline: 8 machines from time zero, 13 frames, 40-second loop.
+- A section machines 1-4; B section machines 5-8 for collector-01.
+- Test JSON moved to test_data/; original dynamic timeline preserved for regression.
+- Unreferenced legacy/quietfix.py removed. Runtime dataset paths/docs updated.
+- Full unittest discovery: 57 tests, 54 passed, 3 optional integrations skipped.
+- compileall and git diff --check passed. User VM deployment not performed.

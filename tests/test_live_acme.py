@@ -135,7 +135,7 @@ type=memory
         cls.tmp.cleanup()
     def test_typed_discovery_analysis_archive_dashboard_and_permissions(self):
         from sensor_simulator import SensorSimulator
-        source=SensorSimulator(c.ROOT/'test_data_expanded.json','live-flex',c.COLLECTOR_ID)
+        source=SensorSimulator(c.ROOT.parent/'test_data/test_data_expanded.json','live-flex',c.COLLECTOR_ID)
         from onem2m_client import collector_client
         collector=collector_client() if self.mqtt_test else Client(c.MN_URL,c.role_origin('collector'))
         samples=[source.read_measurements(i) for i in range(len(source))]

@@ -2,11 +2,10 @@
 
 oneM2M 기반 설비 모니터링 개발 프로토타입입니다.
 
-- `legacy/quietfix.py`: 기존 Type C 통합본
 - `apps/`: 역할별 분리 코드와 최신 대시보드
 - 실행 절차: [apps/README.md](apps/README.md)
 
-수집기 하나가 여러 머신과 센서를 관리하며, 새 머신·센서는 등록 후 분석·전달·대시보드에 자동 반영됩니다. 확장 테스트: `apps/test_data_expanded.json`.
+수집기 하나가 여러 머신과 센서를 관리하며, 새 머신·센서는 등록 후 분석·전달·대시보드에 자동 반영됩니다. 확장 테스트: `test_data/test_data_expanded.json`.
 
 현재 분석은 온도 75°C 이상 또는 진동 RMS 7 mm/s 이상이면 이상으로 판정하는 규칙 방식입니다. 실제 ACME·MEC 환경의 연동 검증은 별도로 필요합니다.
 
@@ -29,7 +28,7 @@ source session.env
 .venv/bin/python apps/analyzer_ae.py
 .venv/bin/python apps/forwarder_ae.py
 .venv/bin/python apps/dashboard.py
-.venv/bin/python apps/collector_ae.py --dataset apps/test_data_expanded.json --interval 5 --replay-id dynamic01
+.venv/bin/python apps/collector_ae.py --dataset test_data/test_data_expanded.json --interval 5 --replay-id dynamic01
 ```
 
 대시보드: http://127.0.0.1:8090/

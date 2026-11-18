@@ -42,7 +42,7 @@ export QF_MQTT_URL=mqtt://BROKER_HOST:1883
 export QF_MQTT_CSE_ID=/ACTUAL_MN_CSE_ID
 # 모델을 설치한 경우에만 추가
 export QF_FLEX_ENABLED=1
-python apps/collector_ae.py --dataset apps/test_data_expanded.json --mode replay --cycles 1 --interval 0.1 --replay-id mqtt-demo
+python apps/collector_ae.py --dataset test_data/test_data_expanded.json --mode replay --cycles 1 --interval 0.1 --replay-id mqtt-demo
 ```
 
 `QF_MQTT_CSE_ID`는 CSEBase의 실제 `csi` 값이다. 리소스 이름인 MN_BASE나 IP 주소가 아니다. 관리자 설정은 HTTP이고 실행 중 수집기의 CSE 요청은 MQTT다. 분석기·전달기·대시보드는 기존 실행 명령을 사용한다. 데이터 파일과 규칙 및 sample_id 형식은 바뀌지 않는다. 이전에 완료한 replay-id를 다시 쓰면 기존 체크포인트 때문에 전송을 건너뛸 수 있다.

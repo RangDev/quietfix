@@ -54,7 +54,7 @@ export QF_COLLECTOR_ID=collector-01
 .venv/bin/python apps/analyzer_ae.py
 .venv/bin/python apps/forwarder_ae.py
 .venv/bin/python apps/dashboard.py
-.venv/bin/python apps/collector_ae.py --dataset apps/test_data_expanded.json --interval 5 --replay-id dynamic01
+.venv/bin/python apps/collector_ae.py --dataset test_data/test_data_expanded.json --interval 5 --replay-id dynamic01
 ```
 
 대시보드: http://127.0.0.1:8090/ (`/api`는 프로그램용 JSON).
@@ -156,7 +156,7 @@ URL을 지정하지 않으면 경고 로그를 남기고 기존 `QF_POLL_SECONDS
 ```bash
 source session.env
 .venv/bin/python apps/collector_ae.py --replay-id adaptive01
-# 기본 데이터셋: apps/test_data_timeline.json
+# 기본 데이터셋: test_data/test_data_timeline.json
 # 조정 예시:
 .venv/bin/python apps/collector_ae.py --mode adaptive --replay-id adaptive02 \
   --measure-period 1 --normal-period 5 --abnormal-period 1
@@ -164,14 +164,14 @@ source session.env
 
 환경 기본값은 QF_MEASURE_PERIOD=1, QF_NORMAL_PERIOD=5, QF_ABNORMAL_PERIOD=1입니다. CLI가 환경값보다 우선합니다. 1초는 이미 계산된 온도/RMS 등의 상태값을 읽는 주기이며 진동·교류 원시 파형의 샘플링 속도가 아닙니다. 실제 드라이버는 대상 대역에 맞게 별도로 구현해야 합니다. 수집기와 분석기는 device_model.py의 동일 판정 규칙을 사용합니다. 분석기의 결과가 기존대로 화면 판정을 결정합니다.
 
-새 시간 기반 JSON은 duration_seconds와 frames 배열로 구성합니다. 각 frame은 at_seconds와 머신별 센서 스냅샷입니다. 프레임은 다음 프레임까지 유지됩니다. 최초 프레임 시각에 머신이 등장합니다. 기본 파일은 머신 1·2가 0초, 머신 3 이상이 10초, 머신 3 회복/압력 추가가 20초, 머신 4가 25초에 등장하며 40초마다 반복합니다. 회차 처음에 아직 등장하지 않은 머신은 새 측정값을 만들지 않고 CSE/대시보드의 이전 값은 남습니다. --cycles 1이면 시나리오 한 바퀴를 측정한 뒤 대기열 전송을 마치고 종료합니다. 연결이 끊겨 있으면 복구를 기다리므로 Ctrl+C로 종료할 수 있습니다.
+새 시간 기반 JSON은 duration_seconds와 frames 배열로 구성합니다. 각 frame은 at_seconds와 머신별 센서 스냅샷입니다. 프레임은 다음 프레임까지 유지됩니다. 최초 프레임 시각에 머신이 등장합니다. 기본 파일은 0초부터 머신 8대가 등장하며 A 구역은 1~4, B 구역은 5~8입니다. 머신 3은 20초에 회복/압력 추가, 머신 6·8은 10초 이상 및 25초 회복을 거치며 40초마다 반복합니다. 기존 지연 등장 시나리오는 test_data/test_data_dynamic_timeline.json에 보존했습니다. 회차 처음에 아직 등장하지 않은 머신은 새 측정값을 만들지 않고 CSE/대시보드의 이전 값은 남습니다. --cycles 1이면 시나리오 한 바퀴를 측정한 뒤 대기열 전송을 마치고 종료합니다. 연결이 끊겨 있으면 복구를 기다리므로 Ctrl+C로 종료할 수 있습니다.
 
 경과 시간은 저장된 측정 tick으로 진행하며 재시작 시 중단된 시나리오 위치부터 이어갑니다. 정지한 동안 시나리오는 진행하지 않습니다. 파일/replay-id/주기 설정이 바뀌면 별도 진행 상태로 시작합니다. 실제 스케줄러는 monotonic 시계를 사용하고, 로컬 처리 지연 시 과거 측정을 몰아서 생성하지 않습니다. 매우 많은 머신/느린 디스크에서는 정확한 1초를 보장하지 않습니다.
 
 기존 배열 JSON은 순차 재생 모드로 계속 지원합니다. --interval 지정도 순차 재생을 선택합니다. 위쪽의 기존 --interval 예시는 여전히 순차 재생이며 적응형 테스트에는 위 명령을 사용하세요.
 
 ```bash
-.venv/bin/python apps/collector_ae.py --mode replay --dataset apps/test_data_expanded.json --interval 5
+.venv/bin/python apps/collector_ae.py --mode replay --dataset test_data/test_data_expanded.json --interval 5
 ```
 
 측정 루프와 HTTP 전송 스레드는 독립적이며 각각 SQLite 연결을 사용합니다. 로컬 파일 state/adaptive-<수집기ID>.sqlite3에 시나리오 진행 상태와 FIFO 전송 대기열을 원자적으로 보관합니다. 서버 응답을 받은 뒤에만 대기열에서 삭제합니다. 재전송 시 sample_id/측정 시각/최초 전송 시도 시각을 유지하므로 기존 CIN 중복 방지를 활용합니다. 실행 중 DB 파일을 복사한다면 WAL까지 고려해야 하므로 앱을 중지한 뒤 옮기세요. 같은 수집기 ID의 프로세스는 한 개만 실행합니다. 순차 재생의 기존 체크포인트를 적응형으로 자동 이관하지 않습니다.

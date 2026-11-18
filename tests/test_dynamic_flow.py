@@ -139,7 +139,7 @@ class DynamicFlow(unittest.TestCase):
 
     def test_dynamic_registration_restart_extension_and_gateway_namespace(self):
         # No setup script or predefined machine list.
-        args = ('--dataset',str(APPS/'test_data_expanded.json'),'--interval','0','--cycles','1')
+        args = ('--dataset',str(APPS.parent/'test_data/test_data_expanded.json'),'--interval','0','--cycles','1')
         self.run_app('collector_ae.py', *args)
         self.pipeline()
         snap = dashboard.snapshot()
@@ -240,7 +240,7 @@ class DynamicFlow(unittest.TestCase):
             sock.bind(('127.0.0.1',0))
             port=sock.getsockname()[1]
         client=Client(self.url)
-        sensor=SensorSimulator(APPS/'test_data_expanded.json')
+        sensor=SensorSimulator(APPS.parent/'test_data/test_data_expanded.json')
         first=sensor.read_measurements(0)
         publish(client,first)
         env={**self.env,'QF_ANALYZER_NOTIFY_URL':f'http://127.0.0.1:{port}/notify',
@@ -267,7 +267,7 @@ class DynamicFlow(unittest.TestCase):
 
     def test_subscriptions_verification_wakeup_and_dynamic_group(self):
         client=Client(self.url)
-        sensor=SensorSimulator(APPS/'test_data_expanded.json')
+        sensor=SensorSimulator(APPS.parent/'test_data/test_data_expanded.json')
         publish(client,sensor.read_measurements(0))
         with Notifications('127.0.0.1',0) as receiver:
             url=f'http://127.0.0.1:{receiver.server.server_port}/notify'
@@ -338,7 +338,7 @@ class Schema(unittest.TestCase):
         self.assertEqual([s['status'] for s in result['sensors']],['normal','abnormal','abnormal','unassessed'])
 
     def test_old_dataset_and_validation(self):
-        sensor=SensorSimulator(APPS/'test_data.json')
+        sensor=SensorSimulator(APPS.parent/'test_data/test_data.json')
         self.assertEqual(len(sensor.read_measurements(0)['sensors']),3)
         bad=[{'machine_id':'../m','temperature_c':1},
              {'machine_id':'m','sensors':[]},

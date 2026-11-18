@@ -29,7 +29,7 @@ def main():
         mode = 'replay'
     if mode == 'adaptive' and a.interval is not None:
         p.error('--interval is for replay; use --measure-period for adaptive')
-    a.dataset = a.dataset or str(c.ROOT/('test_data_timeline.json' if mode=='adaptive' else 'test_data.json'))
+    a.dataset = a.dataset or str(c.ROOT.parent/'test_data'/('test_data_timeline.json' if mode=='adaptive' else 'test_data.json'))
     c.require_mn()
     identifier(c.COLLECTOR_ID)
     if mode == 'adaptive':
