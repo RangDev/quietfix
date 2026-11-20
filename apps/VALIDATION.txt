@@ -1,3 +1,6 @@
+최신 배포 및 주석 제거 검증 기록: ../docs/VALIDATION.md
+아래는 기존 기능별 검증 기록입니다.
+
 v2 검증: Python 문법 검사 및 모의 oneM2M HTTP 서버 기반 통합 테스트 통과.
 - 10행 데이터셋 2회 순환, 총 20개 측정값 및 대응 분석 결과 전달
 - MN/IN 합계 CIN 80개 확인
@@ -96,3 +99,25 @@ Eight-machine defaults and dataset cleanup (2026-11-18)
 - Unreferenced legacy/quietfix.py removed. Runtime dataset paths/docs updated.
 - Full unittest discovery: 57 tests, 54 passed, 3 optional integrations skipped.
 - compileall and git diff --check passed. User VM deployment not performed.
+
+Standalone oneM2M branch (2026-11-20)
+- ACME 2025.11 IN and MN run as loopback Python processes without MEC/K8s.
+- Generated TinyDB configuration and custom FCNT model; separate runtime directories.
+- Actual CSE cst=1/2, MN registration and IN -> Mcc -> MN retrieval passed.
+- Default eight-machine timeline snapshots: publish, analysis, central archive and
+  dashboard API returned eight machines on actual standalone CSEs.
+- unittest: 57 tests, 54 passed, 3 optional skipped; compileall/diff checks passed.
+- TinyDB persistence configured; full reboot/restart and long-load tests not claimed.
+- Forwarder archive retained. User VM and original MEC deployment not modified.
+
+
+2026-11-20 oneM2M-only backup AE via Mcc
+- Real standalone ACME 2025.11 IN/MN: 8 machines publish/analyze/archive/dashboard passed.
+- Backup HTTP requests asserted to use MN endpoint only, including secure role run.
+- Independent IN telemetry equals retained MN telemetry; group contains 8 members.
+- Repeated backup with durable checkpoints and deterministic CIN names passed.
+- Applied role ACPs, replayed retained data through MN/Mcc as Cqfforwarder: passed.
+- unittest: 59 run, 56 passed, 3 optional skipped. Includes failed-write checkpoint and remote-target/current-MN routing contracts.
+- compileall and diff whitespace checks passed.
+- Existing user VM was not modified; TLS/MQTT/UI optional integration was not rerun for this change.
+

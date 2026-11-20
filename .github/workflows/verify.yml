@@ -1,0 +1,27 @@
+name: Verify oneM2M prototype
+
+on:
+  push:
+    branches: [onem2m-only]
+  pull_request:
+    branches: [onem2m-only]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: standalone/requirements-lock.txt
+      - run: python -m pip install -r standalone/requirements-lock.txt
+      - run: python -m compileall -q apps standalone tests
+      - run: python -m unittest discover -s tests -v
+      - run: python standalone/smoke_test.py

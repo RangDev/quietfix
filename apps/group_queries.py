@@ -1,10 +1,10 @@
-"""Maintain an IN telemetry group and retrieve its latest CINs."""
+
 import config as c
 from onem2m_client import OneM2MError
 from resource_registry import discover_machines
 
-def sync_group(client):
-    members = sorted(m['path'].lstrip('/')+'/telemetry' for m in discover_machines(client, c.IN_BASE+'/archive'))
+def sync_group(client, members=None):
+    members = sorted(members) if members is not None else sorted(m['path'].lstrip('/')+'/telemetry' for m in discover_machines(client, c.IN_BASE+'/archive'))
     if not members:
         return
     attrs = {'rn': 'telemetryGroup', 'mt': 3, 'mnm': max(1000,len(members)), 'mid': members}
@@ -36,3 +36,5 @@ def latest_group(client):
             sample = client.content(cin)
             readings[(sample['collector_id'],sample['machine_id'])] = sample
     return readings
+
+

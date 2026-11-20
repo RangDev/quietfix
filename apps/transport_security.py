@@ -1,4 +1,4 @@
-"""TLS and authenticated Originator binding shared by HTTP apps and gateway."""
+
 import json
 import os
 import ssl
@@ -25,3 +25,4 @@ def peer_name(connection):
     names=[value for group in connection.getpeercert().get('subject',[]) for name,value in group if name=='commonName']
     if len(names)!=1:raise ValueError('Expected one certificate commonName')
     return names[0]
+

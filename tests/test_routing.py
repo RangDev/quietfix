@@ -25,3 +25,4 @@ class RoutingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path=tmp+'/route.json';atomic_write(path,{'a':1});atomic_write(path,{'b':2})
             self.assertEqual(json.loads(Path(path).read_text()),{'b':2})
+

@@ -1,4 +1,4 @@
-"""HTTP dashboard reading IN-CSE only; never generates or analyzes samples."""
+
 import argparse
 import json
 import threading
@@ -28,12 +28,12 @@ def section_settings():
             if not all(isinstance(value,str) and value for value in key) or key in mapping:
                 raise ValueError('A machine must belong to only one dashboard section')
             mapping[key]={'section_id':sid,'section_name':name}
-    return [{'id':item['id'],'name':item['name']} for item in sections]+[{'id':'unassigned','name':'미배정'}],mapping
+    return [{'id':item['id'],'name':item['name']} for item in sections]+[{'id':'unassigned','name':'\ubbf8\ubc30\uc815'}],mapping
 
 def snapshot():
     sections,assignments=section_settings()
     client = Client(c.IN_URL, c.role_origin('dashboard'))
-    # A dashboard can start before the forwarder provisions the archive.
+
     results = []
     try:
         results = list(client.records(c.IN_BASE+'/archive/results'))
@@ -47,7 +47,7 @@ def snapshot():
     machines = []
     for machine in registered:
         info = {k: machine[k] for k in ('collector_id', 'machine_id', 'machine_name', 'sensors')}
-        info.update(assignments.get((info['collector_id'],info['machine_id']),{'section_id':'unassigned','section_name':'미배정'}))
+        info.update(assignments.get((info['collector_id'],info['machine_id']),{'section_id':'unassigned','section_name':'\ubbf8\ubc30\uc815'}))
         sample = grouped.get((machine['collector_id'], machine['machine_id']))
         if sample is None:
             sample = latest_or_none(client, machine['path']+'/telemetry')
@@ -62,7 +62,7 @@ def snapshot():
                          'state': 'ready' if matching else 'waiting_for_analysis'})
     return {'source': 'IN-CSE', 'machines': machines, 'sections':sections, '_results': results}
 class DashboardCache:
-    """One background poller for all browsers. Alerts never touch a database."""
+
     def __init__(self):
         self.lock = threading.Lock()
         self.alerts = deque(maxlen=10)
@@ -81,7 +81,7 @@ class DashboardCache:
                     key = (r.get('collector_id'), r['machine_id'], r['sample_id'])
                     if r.get('status') == 'abnormal' and key not in self.seen:
                         self.alerts.appendleft({**r, 'detected_at': now})
-                # Bounded by CSE's retained result set, not by server uptime.
+
                 self.seen = keys
                 self.data = {**value, 'updated_at': now}
                 self.error = None
@@ -92,7 +92,7 @@ class DashboardCache:
     def read(self):
         with self.lock:
             if self.data is None:
-                return 503, {'error': self.error or '첫 데이터 조회 중'}
+                return 503, {'error': self.error or '\uccab \ub370\uc774\ud130 \uc870\ud68c \uc911'}
             return 200, {**self.data, 'alerts': list(self.alerts), 'error': self.error}
 
     def run(self, stop):
@@ -137,3 +137,4 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         pass
+

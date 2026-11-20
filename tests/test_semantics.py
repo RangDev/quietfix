@@ -25,3 +25,4 @@ class SemanticsTests(unittest.TestCase):
         attrs={'collectorId':'c','machineId':'m','sensorId':'t','sensorType':'temperature','unit':'°C','value':1,'timestamp':'2026-11-18T00:00:00Z'}
         client=Mock();client.call.side_effect=[{'m2m:uril':['mn/c/t/meaning']},{'m2m:smd':{'dcrp':4,'dsp':descriptor('outside/admin',attrs)}}]
         self.assertEqual(discover_paths(client,'mn'),[])
+

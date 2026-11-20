@@ -1,4 +1,4 @@
-"""Controlled single-gateway CSE migration; verifies before atomically switching route."""
+
 import argparse,json,os,time
 from pathlib import Path
 import config as c
@@ -53,7 +53,7 @@ def transfer(target_url,target_base,target_cse_id,target_mqtt_url=None):
             analyzer=Client(c.MN_URL,c.role_origin('analyzer'))
             result_path=ensure_analyzer(analyzer)
             for result in results:analyzer.put(result_path,result);report['results']+=1
-            # Role-based read verifies complete retained content, not only resource counts.
+
             for path,sample in targets:
                 import hashlib
                 rn='qf-'+hashlib.sha256(sample['sample_id'].encode()).hexdigest()
@@ -88,7 +88,7 @@ def transfer(target_url,target_base,target_cse_id,target_mqtt_url=None):
             routing.atomic_write(journal,report)
             return report
         except Exception as error:
-            # A route replacement is the commit point. Never report rollback after it.
+
             current=routing.read_route()
             report.update(phase='committed' if current!=source_route else 'failed_before_switch',error=str(error),elapsed_seconds=time.monotonic()-started)
             routing.atomic_write(journal,report)
@@ -103,3 +103,4 @@ def main():
     p.add_argument('--target-cse-id',required=True);p.add_argument('--target-mqtt-url')
     a=p.parse_args();print(json.dumps(transfer(a.target_url,a.target_base,a.target_cse_id,a.target_mqtt_url),indent=2))
 if __name__=='__main__':main()
+

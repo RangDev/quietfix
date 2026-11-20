@@ -1,4 +1,4 @@
-"""Shared-file controlled routing for workers on one Linux host."""
+
 from contextlib import contextmanager
 from functools import wraps
 import fcntl,json,os
@@ -55,3 +55,4 @@ def guarded(function):
                 else:clients[0].url=c.MN_URL
             return function(*clients,**kwargs)
     return run
+

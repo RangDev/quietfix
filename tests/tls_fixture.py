@@ -1,4 +1,4 @@
-"""Disposable test CA; never persist private keys to the repository."""
+
 from pathlib import Path
 import subprocess
 
@@ -11,3 +11,4 @@ def certificates(directory):
         ext=root/(name+'.ext');ext.write_text('subjectAltName=DNS:localhost,IP:127.0.0.1\nextendedKeyUsage=serverAuth,clientAuth\n')
         run('x509','-req','-in',str(root/(name+'.csr')),'-CA',str(root/'ca.crt'),'-CAkey',str(root/'ca.key'),'-CAcreateserial','-out',str(root/(name+'.crt')),'-days','1','-extfile',str(ext))
     return root
+

@@ -1,4 +1,4 @@
-"""Per-machine sampling and durable asynchronous delivery."""
+
 import hashlib
 import json
 import logging
@@ -102,7 +102,7 @@ def deliver(path,stop,notify,send=None):
                 notify.wait(.2);notify.clear();continue
             ident,sample=row
             try:
-                # Record a stable first-attempt time; retry payload must stay identical.
+
                 if 'delivery_started_at' not in sample:
                     sample['delivery_started_at']=datetime.now(timezone.utc).isoformat()
                     with store.db: store.db.execute('UPDATE outbox SET payload=? WHERE id=?',(json.dumps(sample),ident))
@@ -122,7 +122,7 @@ def run(args):
     c.STATE.mkdir(parents=True,exist_ok=True)
     path=c.STATE/('adaptive-'+c.COLLECTOR_ID+'.sqlite3')
     store=Store(path)
-    # Timing settings are part of the checkpoint identity.
+
     key=f'v4:{c.COLLECTOR_ID}:{timeline.fingerprint}:{args.replay_id}:{values}'
     stop,notify=threading.Event(),threading.Event()
     worker=threading.Thread(target=deliver,args=(path,stop,notify),daemon=True)
@@ -134,7 +134,7 @@ def run(args):
             state=store.sample_tick(key,timeline,c.COLLECTOR_ID,args.replay_id,*values,args.outbox_limit)
             notify.set()
             deadline+=args.measure_period
-            # Do not burst-sample past wall-clock deadlines after slow local I/O.
+
             if deadline<time.monotonic():deadline=time.monotonic()+args.measure_period
             stop.wait(max(0,deadline-time.monotonic()))
         while store.head() is not None:
@@ -142,3 +142,4 @@ def run(args):
             notify.set();stop.wait(.1)
     finally:
         stop.set();notify.set();worker.join(c.TIMEOUT+1);store.db.close()
+

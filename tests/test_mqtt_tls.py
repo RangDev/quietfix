@@ -1,4 +1,4 @@
-"""Real authenticated TLS broker and publish/subscribe ACL verification."""
+
 import json,os,socket,subprocess,sys,tempfile,threading,time,unittest
 from pathlib import Path
 from tls_fixture import certificates
@@ -53,3 +53,4 @@ class BrokerTLS(unittest.TestCase):
             finally:
                 for client in clients:client.disconnect();client.loop_stop()
                 process.terminate();process.wait(5);log.close()
+

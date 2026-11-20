@@ -1,4 +1,4 @@
-"""Local durable checkpoints. Each process uses its own SQLite database."""
+
 import sqlite3
 import json
 import config as c
@@ -30,3 +30,4 @@ class State:
         with self.db:
             self.db.execute('INSERT OR REPLACE INTO cursor VALUES (?,?)', (key, next_index))
             self.db.execute('DELETE FROM pending WHERE key=?', (key,))
+

@@ -1,4 +1,4 @@
-"""Per-device environment configuration. Importing this module starts no service."""
+
 import os
 from pathlib import Path
 ROOT = Path(__file__).resolve().parent
@@ -16,7 +16,7 @@ def require_mn():
     if not MN_BASE:
         raise SystemExit('QF_MN_BASE is missing. Run: source session.env')
 
-# Advertised URLs must be reachable FROM the MN-CSE container.
+
 NOTIFY_HOST = os.getenv('QF_NOTIFY_HOST', '0.0.0.0')
 ANALYZER_NOTIFY_PORT = int(os.getenv('QF_ANALYZER_NOTIFY_PORT', '8091'))
 FORWARDER_NOTIFY_PORT = int(os.getenv('QF_FORWARDER_NOTIFY_PORT', '8092'))
@@ -29,7 +29,7 @@ NORMAL_PERIOD = float(os.getenv('QF_NORMAL_PERIOD', '5'))
 ABNORMAL_PERIOD = float(os.getenv('QF_ABNORMAL_PERIOD', '1'))
 OUTBOX_LIMIT = int(os.getenv('QF_OUTBOX_LIMIT', '10000'))
 
-# Opt-in access control: legacy development commands remain unchanged by default.
+
 ACP_ENABLED = os.getenv('QF_ACP_ENABLED') == '1'
 ADMIN_ORIGIN = os.getenv('QF_ADMIN_ORIGIN', ORIGIN)
 def role_origin(role):
@@ -42,7 +42,7 @@ def role_origin(role):
         raise ValueError('Runtime role must not use the administrator origin')
     return origin
 
-# Optional typed latest-value projection; CIN history remains unchanged.
+
 FLEX_ENABLED = os.getenv('QF_FLEX_ENABLED') == '1'
 
 COLLECTOR_PROTOCOL = os.getenv('QF_COLLECTOR_PROTOCOL', 'http').lower()
@@ -57,3 +57,15 @@ SEMANTIC_ENABLED = os.getenv('QF_SEMANTIC_ENABLED') == '1'
 
 if SEMANTIC_ENABLED and not FLEX_ENABLED:
     raise ValueError('Semantic mode requires QF_FLEX_ENABLED=1')
+
+
+
+IN_CSE_ID = os.getenv('QF_IN_CSE_ID', '/id-quietfix-in').strip('/')
+MN_CSE_ID = os.getenv('QF_MN_CSE_ID', '/id-quietfix-mn').strip('/')
+
+
+ML_MODEL_DIR = Path(os.getenv('QF_ML_MODEL_DIR', str(STATE / 'ml_models')))
+ML_CONSECUTIVE = int(os.getenv('QF_ML_CONSECUTIVE', '3'))
+if ML_CONSECUTIVE < 1:
+    raise ValueError('QF_ML_CONSECUTIVE must be positive')
+

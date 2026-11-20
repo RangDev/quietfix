@@ -1,4 +1,4 @@
-"""Read the dataset sequentially and publish to MN-CSE. No dashboard or AI."""
+
 import argparse
 import json
 from pathlib import Path
@@ -49,7 +49,7 @@ def main():
     key = 'v3:'+c.COLLECTOR_ID+':'+sensor.fingerprint+':'+a.replay_id
     index = state.position(key)
     client = collector_client()
-    # AE registration is performed at startup, before the first measurement.
+
     while True:
         try:
             ensure_ae(client, c.MN_BASE, c.COLLECTOR_ID)
@@ -81,3 +81,4 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         pass
+

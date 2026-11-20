@@ -1,4 +1,4 @@
-"""Opt-in real ACME integration; creates isolated in-memory CSE processes."""
+
 import json
 import os
 from pathlib import Path
@@ -117,7 +117,7 @@ type=memory
                     pp=patch.object(c,name,value);pp.start();cls.patchers.append(pp)
             pp=patch.dict(os.environ,{'QF_COLLECTOR_ORIGIN':'Cqfcollector-01','QF_ANALYZER_ORIGIN':'Cqfanalyzer','QF_FORWARDER_ORIGIN':'Cqfforwarder','QF_DASHBOARD_ORIGIN':'Cqfdashboard'})
             pp.start();cls.patchers.append(pp)
-            # Provision actual AEs, ACPs and namespaces on the isolated CSEs.
+
             import access_control
             with patch.object(sys,'argv',['access_control.py','--apply']):access_control.main()
         except Exception:
@@ -140,7 +140,7 @@ type=memory
         collector=collector_client() if self.mqtt_test else Client(c.MN_URL,c.role_origin('collector'))
         samples=[source.read_measurements(i) for i in range(len(source))]
         paths=[publish(collector,sample) for sample in samples]
-        # MQTT retransmission uses the same CIN name; it must not duplicate history.
+
         publish(collector,samples[0])
         retained=list(collector.records(paths[0]+'/telemetry'))
         expected={s['sample_id'] for s in samples if s['machine_id']==samples[0]['machine_id']}
@@ -160,7 +160,7 @@ type=memory
             with self.assertRaises(OneM2MError) as raised:
                 collector.call('POST',c.MN_BASE+'/analyzer/results',{'m2m:cin':{'rn':'forbidden','con':'no'}},4)
             self.assertEqual(raised.exception.status,403)
-            # A real broker outage must fail, then reconnect and resubscribe without rebuilding the client.
+
             broker=self.procs[0];broker.terminate();broker.wait(5)
             for _ in range(40):
                 if not collector.ready.is_set():break
@@ -170,7 +170,7 @@ type=memory
                 with self.assertRaises(TimeoutError):collector.call('GET',c.MN_BASE+'/'+c.COLLECTOR_ID)
             self.procs[0]=subprocess.Popen(broker.args,stdout=self.logs[0],stderr=self.logs[0])
             self.assertTrue(collector.ready.wait(15),'MQTT client failed to reconnect')
-            # ACME also reconnects asynchronously; retry reads during its resubscription window.
+
             for attempt in range(5):
                 try:
                     with patch.object(c,'TIMEOUT',2):collector.call('GET',c.MN_BASE+'/'+c.COLLECTOR_ID)
@@ -216,7 +216,7 @@ type=memory
             atomic_write(route,{'url':c.MN_URL,'base':c.MN_BASE,'cse_id':'/id-mn'})
             with Notifications('127.0.0.1',0) as receiver, patch.dict(os.environ,{'QF_ROUTE_FILE':str(route)}):
                 subscribe(reader,'analyzer',f'http://127.0.0.1:{receiver.server.server_address[1]}/notify')
-                # A failed target must not switch the shared route.
+
                 original=json.loads(route.read_text())
                 with self.assertRaises(Exception):
                     with patch.object(c,'TIMEOUT',.2):transfer('http://127.0.0.1:1','absent','/id-absent')
@@ -239,3 +239,4 @@ type=memory
                 self.assertEqual(c.MN_BASE,'backup')
                 archived=list(central.records(c.IN_BASE+'/archive/'+c.COLLECTOR_ID+'/machine-'+samples[0]['machine_id']+'/telemetry'))
                 self.assertEqual(len(archived),len({r['sample_id'] for r in archived}))
+

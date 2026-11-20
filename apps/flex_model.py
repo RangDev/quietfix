@@ -1,4 +1,4 @@
-"""Versioned typed sensor projection with real FCNT discovery (ty=28, cnd)."""
+
 from datetime import datetime
 from urllib.parse import urlencode
 import config as c
@@ -33,7 +33,7 @@ def publish_readings(client, machine_path, sample):
         existing = client.ensure(machine_path, KIND, attrs, 28)[KIND]
         if existing.get('cnd') != CND:
             raise ValueError('Unexpected sensor specialization at '+machine_path+'/'+rn)
-        # Historical catch-up/retry must not move the latest-value projection backwards.
+
         if instant(existing['timestamp']) > instant(sample['timestamp']):
             continue
         changes = {k:v for k,v in attrs.items() if k not in ('rn','cnd','lbl','acpi')}
@@ -71,7 +71,7 @@ def discover(client, base):
     yield from (machines[k] for k in sorted(machines))
 
 def with_typed_readings(sample, machine):
-    """Use a complete matching typed snapshot; history/partial updates stay on CIN."""
+
     readings=[s for attrs,s in machine.get('_typed',[]) if
               attrs['sampleId']==sample['sample_id'] and attrs['timestamp']==sample['timestamp'] and
               attrs['collectorId']==sample['collector_id'] and attrs['machineId']==sample['machine_id']]
@@ -81,3 +81,4 @@ def with_typed_readings(sample, machine):
         ordered=[by_id[s['sensor_id']] for s in normalize(sample)['sensors']]
         return {**sample,'sensors':ordered,'data_model':CND}
     return sample
+
