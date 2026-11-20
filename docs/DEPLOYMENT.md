@@ -1,18 +1,18 @@
-# 배포 및 운영
+# Deployment and Operation
 
-## 지원 범위
+## Supported Scope
 
-Linux, Python 3.12, 단일 호스트 loopback HTTP 구성입니다. Ubuntu 24.04를
-설치 대상 환경으로 삼습니다. 검증 환경과 결과는 [VALIDATION.md](VALIDATION.md)에 기록합니다.
-ACME 2025.11과 앱 직접 의존성은 requirements 파일에 고정했습니다.
-Linux/Python 3.12 검증에 사용한 전체 의존성은 standalone/requirements-lock.txt에 기록했습니다.
-가상환경을 이동하면 다시 만들고 CSE 설정의 resourcesPath를 확인하세요.
-Windows에서는 Ubuntu VM 또는 WSL 안에서 실행합니다.
+The supported configuration is Linux, Python 3.12, and single-host loopback HTTP. Ubuntu 24.04 is
+the deployment target. Validation environments and results are recorded in [VALIDATION.md](VALIDATION.md).
+ACME 2025.11 and direct application dependencies are pinned in requirements files.
+The complete dependency set used for Linux/Python 3.12 validation is in standalone/requirements-lock.txt.
+Recreate moved virtual environments and check resourcesPath in CSE configuration.
+On Windows, run inside an Ubuntu VM or WSL.
 
-## 최초 설치
+## Initial Installation
 
 ```bash
-git clone --branch onem2m-only --single-branch https://github.com/RangDev/quietfix.git
+git clone --branch english --single-branch https://github.com/RangDev/quietfix.git
 cd quietfix
 python3 -m venv .venv
 .venv/bin/python -m pip install -r standalone/requirements-lock.txt
@@ -20,11 +20,11 @@ python3 -m venv .venv
 source runtime/standalone/session.env
 ```
 
-비공개 저장소는 먼저 본인 Git 인증을 설정해야 합니다. Ubuntu에서 venv 모듈이
-없으면 `sudo apt install python3-venv`로 설치합니다. 위 prepare는 기존 환경 파일과
-CSE 설정을 덮어쓰지 않습니다. 기존 데이터를 삭제하거나 자동 이관하지 않습니다.
+Private repositories require Git authentication first. If Ubuntu lacks the venv module,
+install it with `sudo apt install python3-venv`. The prepare command above preserves existing environment
+and CSE configuration files. It does not delete or automatically migrate existing data.
 
-## ML 학습과 독립 평가
+## ML Training and Independent Evaluation
 
 ```bash
 .venv/bin/python apps/ml_manage.py generate --dataset ml_data/normal.json --seed 42
@@ -33,39 +33,39 @@ CSE 설정을 덮어쓰지 않습니다. 기존 데이터를 삭제하거나 자
 .venv/bin/python apps/ml_manage.py evaluate --dataset ml_data/test.json
 ```
 
-기본 생성기는 collector-01의 machine-01·02에 대해서만 학습합니다.
-정상 80% 학습과 20% 기준점 보정, 다른 시드의 시험 데이터를 사용합니다.
-라이브 측정값을 자동으로 정상 학습하지 않습니다. 실제 장비는 정상임을 확인한
-데이터를 해당 ID로 제공하고 train을 명시적으로 실행하세요.
+The default generator trains only machine-01 and machine-02 under collector-01.
+It uses 80% normal data for training, 20% for threshold calibration, and a different seed for testing.
+Live readings are not automatically treated as normal training data. For actual equipment, provide data
+confirmed to be normal under the corresponding IDs and explicitly run train.
 
-## 실행: 두 가지 시연
+## Execution: Two Demonstrations
 
-### 기본 8대 모니터링
+### Basic Eight-Machine Monitoring
 
 ```bash
 .venv/bin/python standalone/service.py start
 ```
 
-기본 시간 기반 데이터로 8대를 표시합니다. 학습한 machine-01·02만 모델 준비 상태이며,
-나머지 6대는 모델 없음 상태에서 임계값 감시를 수행합니다. 기본 8대 데이터의 분포는
-학습 데이터와 다르므로 ML 정확도 평가용으로 사용할 수 없습니다.
+The default timeline displays eight machines. Only trained machine-01 and machine-02 have ready models;
+the other six retain threshold monitoring without models. The basic eight-machine data distribution
+differs from training data and cannot be used to evaluate ML accuracy.
 
-### 학습과 일치하는 2대 ML 시연
+### Two-Machine ML Demonstration Matching Training
 
-기존 서비스가 실행 중이면 먼저 stop합니다.
+Stop any running services first.
 
 ```bash
 .venv/bin/python standalone/service.py stop
 .venv/bin/python standalone/service.py start --dataset ml_data/test.json --interval 1 --replay-id ml-demo01
 ```
 
-기본 1,000개 시점/머신 시험 데이터는 2대 합계 2,000행이므로 1회 재생에 약 33분이 걸립니다.
-원시 ML 경보는 정상에서 조합 급변·완만한 변화·회복으로 전환합니다. 운영 경보는 연속
-3회 이상을 적용하므로 evaluate 수치와 다릅니다. 시연 시간을 줄이려면
-`generate-test --count 100`으로 별도 파일을 만들고 새 replay-id로 실행하세요.
-동일 파일·replay-id는 재시작 시 이어서 전송합니다.
+The default 1,000 test points per machine produce 2,000 rows for two machines, taking about 33 minutes per replay.
+Raw ML results move through normal operation, abrupt combined changes, gradual changes, and recovery. Runtime
+alerts require 3 consecutive anomalies, so they differ from evaluate metrics. To shorten the demonstration,
+create a separate file with `generate-test --count 100` and run it with a new replay-id.
+The same file/replay-id resumes transmission after restart.
 
-## 상태·로그·종료·재시작
+## Status, Logs, Shutdown, and Restart
 
 ```bash
 .venv/bin/python standalone/service.py status
@@ -75,47 +75,47 @@ CSE 설정을 덮어쓰지 않습니다. 기존 데이터를 삭제하거나 자
 .venv/bin/python standalone/service.py start
 ```
 
-관리 도구는 IN → MN → 리소스 준비 → 분석 → 백업 → 대시보드 → 수집 순서로 실행합니다.
-기동 실패 시 이번에 시작한 프로세스를 정리합니다. stop은 역순으로 종료합니다.
-status는 프로세스 생존 확인이며 데이터 경로 검증을 대신하지 않습니다.
-다중 start와 사용 중인 포트는 거부합니다. 자동 재시작·재부팅 자동 실행은 제공하지 않습니다.
-수동 실행한 서비스는 관리 대상이 아니므로 해당 터미널에서 종료해야 합니다.
+The manager starts IN → MN → resource setup → analyzer → backup → dashboard → collector.
+If startup fails, it cleans up processes started during that attempt. stop shuts them down in reverse order.
+status checks process liveness and does not replace data-path verification.
+Duplicate starts and occupied ports are rejected. Automatic restart and startup after reboot are not provided.
+Manually launched services are not managed and must be stopped in their own terminals.
 
-대시보드: http://127.0.0.1:8090/ · API: http://127.0.0.1:8090/api
-API의 machines[].analysis.ml.model_state가 ready인지, 원본과 결과 sample_id가
-연결되는지 확인하세요. API의 error가 있거나 waiting_for_analysis 상태라면 로그를 확인합니다.
-start 완료는 HTTP 준비 확인이며 모든 머신의 ML 판정 완료를 보장하지 않습니다.
+Dashboard: http://127.0.0.1:8090/ · API: http://127.0.0.1:8090/api
+Check that machines[].analysis.ml.model_state is ready and source/result sample_id values
+match. Inspect logs if the API reports error or waiting_for_analysis.
+Successful start confirms HTTP readiness, not completed ML analysis for every machine.
 
-| 항목 | 기본 위치/포트 |
+| Item | Default Location/Port |
 |---|---|
 | IN-CSE | 127.0.0.1:9090, quietfix-in |
 | MN-CSE | 127.0.0.1:8081, quietfix-mn |
-| 대시보드 | 127.0.0.1:8090 |
-| 분석·백업 알림 | 8091 / 8092 |
-| 환경 파일 | runtime/standalone/session.env |
-| CSE 설정·DB | runtime/standalone/in 및 mn |
-| AE 체크포인트 | runtime/standalone/state |
-| 학습 모델 | 위 state/ml_models |
-| 서비스 로그 | runtime/standalone/logs |
+| Dashboard | 127.0.0.1:8090 |
+| Analyzer/backup notifications | 8091 / 8092 |
+| Environment file | runtime/standalone/session.env |
+| CSE configuration/databases | runtime/standalone/in and mn |
+| AE checkpoints | runtime/standalone/state |
+| Trained models | state/ml_models beneath the path above |
+| Service logs | runtime/standalone/logs |
 
-관리 도구는 기본 로컬 포트와 CSE 이름을 전제로 합니다. 사용자 지정 포트·분산 장비·
-MQTT·TLS·ACP·전환 실험은 [수동 운영 가이드](../standalone/README.md)와 기능별 문서를 따르세요.
-session.env의 단순 export KEY=value를 읽으며 셸 명령을 평가하지 않습니다.
+The manager assumes default local ports and CSE names. For custom ports, distributed equipment,
+MQTT, TLS, ACP, and transfer experiments, follow the [manual operation guide](../standalone/README.md) and feature documentation.
+It reads simple export KEY=value entries in session.env without evaluating shell commands.
 
-## 검증과 보존
+## Validation and Preservation
 
-전체 서비스를 중지한 후 다음을 실행합니다.
+Stop all services before running:
 
 ```bash
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python standalone/smoke_test.py
 ```
 
-smoke test는 임시 DB에서 실제 IN/MN·Mcc·8대 저장/분석/중앙 사본·API용 snapshot을
-확인합니다. 관리 도구 실행과 학습 모델 적용 확인은 [별도 검증](VALIDATION.md)입니다.
-선택적 브라우저·TLS 시험의 skip은 성공으로 계산하지 않습니다.
+The smoke test uses temporary databases to verify actual IN/MN, Mcc, eight-machine storage/analysis/central copies,
+and API snapshots. Manager execution and trained-model application have [separate validation records](VALIDATION.md).
+Skipped optional browser/TLS tests do not count as passes.
 
-종료 후 runtime/standalone 전체를 복사하면 CSE DB·상태·모델·환경 파일을 함께 보존할 수 있습니다.
-재실행 시 같은 위치와 가상환경을 사용하세요. 파일을 복사한 다른 호스트에서는
-환경 주소·resourcesPath를 점검하고 services.json은 실행 상태 파일이므로 재사용하지 마세요.
-VM 외부에서 보려면 SSH 포트 포워딩을 사용합니다. 기본 CAdmin/HTTP 구성은 외부 공개용이 아닙니다.
+After shutdown, copy all of runtime/standalone to preserve CSE databases, state, models, and environment files.
+Reuse the same location and virtual environment when restarting. On another host, check
+addresses and resourcesPath; do not reuse services.json because it records process state.
+Use SSH port forwarding to access the VM externally. The default CAdmin/HTTP configuration is not intended for public exposure.

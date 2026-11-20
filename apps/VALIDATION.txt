@@ -1,50 +1,50 @@
-최신 배포 및 주석 제거 검증 기록: ../docs/VALIDATION.md
-아래는 기존 기능별 검증 기록입니다.
+Latest deployment and source-comment cleanup validation: ../docs/VALIDATION.md
+The following records describe earlier feature-specific validation.
 
-v2 검증: Python 문법 검사 및 모의 oneM2M HTTP 서버 기반 통합 테스트 통과.
-- 10행 데이터셋 2회 순환, 총 20개 측정값 및 대응 분석 결과 전달
-- MN/IN 합계 CIN 80개 확인
-- 이상 판정, 동일 실행 재시작 시 중복 방지, 새 replay-id 확인
-- 현재 UTC timestamp 생성, 순환 시 새로운 sample_id 확인
-- 전송 대기 payload SQLite 보존 및 성공 시 원자적 체크포인트 갱신
-- IN 데이터와 분석 결과 sample_id 매칭
-실제 사용자 VM의 ACME/MEC 연동과 실시간 5초 간격은 이 테스트에서 검증하지 않음. 통합 테스트에서는 대기 간격 0을 사용함.
+v2 validation: Python syntax checks and integration tests with a mock oneM2M HTTP server passed.
+- Two cycles of a 10-row dataset; 20 measurements and corresponding analysis results delivered
+- 80 total CINs across MN/IN verified
+- Anomaly classification, deduplication after same-run restart, and new replay-id checked
+- Current UTC timestamps generated; new sample_id values on each cycle checked
+- Pending payloads persisted in SQLite; checkpoints updated atomically after success
+- IN data and analysis result sample_id matching verified
+Actual user-VM ACME/MEC integration and real-time five-second intervals were not tested. Integration tests used zero wait intervals.
 
-대시보드 UI 업데이트 검증:
-- 모의 결과를 이용한 알림 10개 상한, 동일 sample_id 중복 방지, 오래된 알림 교체 통과
-- 통신 오류 시 마지막 데이터 캐시 유지 통과
-- Python 문법 검사 통과
-- 실행 환경의 Chromium 제한으로 실제 브라우저 렌더링/모바일 시각 검증은 완료하지 못함
+Dashboard UI update validation:
+- Mock results passed checks for a 10-alert limit, same-sample_id deduplication, and replacement of old alerts
+- Last-data cache retained on communication errors
+- Python syntax checks passed
+- Actual browser rendering/mobile visual checks were not completed due to Chromium restrictions in the execution environment
 
-v3 동적 등록 검증 (2026-11-17):
-- python3 -m unittest discover -s tests -v: 6개 테스트 통과
-- 로컬 HTTP oneM2M 테스트 서버와 실제 앱 프로세스로 MN 등록 → 분석 → IN 전달 → 대시보드 snapshot 검증
-- setup 없이 수집기 AE/머신/센서 등록, 기존 3종 센서 JSON 호환
-- 한 수집기에서 머신 4개 처리, 머신 3의 센서 4→5개 증가, 동종 온도 센서 2개 개별 판정
-- 실행 중인 분석기/전달기를 재시작하지 않고 신규 머신 및 센서 반영
-- 서로 다른 수집기에서 동일 머신 ID를 사용해도 원본·분석·알림 분리
-- 수집기 재시작 및 CIN 재전송 시 중복 방지, metadata는 최신 1개 보존
-- 온도 75 / 진동 7 경계값, 미지원 종류·단위 미판정, 잘못된 ID/숫자/중복 센서 거절
-- 알림 10개 상한·중복 방지 및 조회 오류 시 마지막 캐시 유지
-- jsdom으로 실제 PAGE 스크립트 실행: 동적 카드/센서 항목, 이상 CSS 클래스, 회복,
-  미판정, 미수신 센서, 시계, 알림, 입력값의 안전한 텍스트 출력 확인
-- Python 전체 문법 검사 및 git diff --check 통과
-- Chromium 실행은 소켓 권한 제한으로 실패. 실제 브라우저/모바일 시각 검증은 미완료
-- 사용자 VM의 실제 ACME/MEC/물리 센서 연동은 미검증. CSE 테스트 더블은 전체 표준 구현이 아님
+v3 dynamic registration validation (2026-11-17):
+- python3 -m unittest discover -s tests -v: 6 tests passed
+- Local HTTP oneM2M test server and real application processes verified MN registration → analysis → IN forwarding → dashboard snapshot
+- Collector AE/machine/sensor registration without setup; compatibility with legacy three-sensor JSON
+- One collector handled four machines; machine 3 grew from four to five sensors; two temperature sensors were classified separately
+- New machines and sensors appeared without restarting the running analyzer/forwarder
+- Identical machine IDs under different collectors retained separate source/analysis/alert records
+- Deduplication after collector restart/CIN retransmission; metadata retained only the latest record
+- Temperature 75/vibration 7 boundaries; unsupported types/units unassessed; invalid IDs/numbers/duplicate sensors rejected
+- 10-alert limit/deduplication and last-cache retention on query errors
+- Actual PAGE script executed with jsdom: dynamic cards/sensor rows, anomaly CSS classes, recovery,
+  unassessed states, missing sensors, clock, alerts, and safe text rendering of input values verified
+- All Python syntax checks and git diff --check passed
+- Chromium failed because of socket permission restrictions; actual browser/mobile visual validation remained incomplete
+- User-VM actual ACME/MEC/physical sensors were not tested. The CSE test double is not a full standard implementation
 
-구독/그룹 업데이트:
-- 로컬 HTTP 테스트 더블에서 subscription 생성 검증 요청/응답, 새 CIN 알림 wake-up 확인
-- 신규 머신 구독 추가, IN group 생성/멤버 갱신, fopt/la 집계 파싱 및 빈 멤버 개별 조회 확인
-- 기존 전체 샘플 처리·중복 방지·재시작·알림 10건 테스트 유지
-- 실제 사용자 VM의 ACME 구독 검증·콜백 네트워크·fan-out 연동은 미검증
-- 전체 자동 테스트 8개 통과. 실제 분석기 프로세스가 30초 보완 주기 전에 HTTP 알림으로 신규 샘플을 분석하는 것 확인
+Subscription/group update:
+- Local HTTP test double verified subscription creation verification requests/responses and wake-up on new CIN notifications
+- New-machine subscriptions, IN group creation/member updates, fopt/la aggregation parsing, and individual queries for empty members checked
+- Existing all-sample processing/deduplication/restart/10-alert tests retained
+- Actual user-VM ACME subscription verification, callback networking, and fan-out integration were not tested
+- All 8 automated tests passed. The actual analyzer process analyzed new samples after HTTP notifications before the 30-second reconciliation interval
 
-v4 머신별 적응형 수집:
-- 머신별 1초 측정, 정상 5초/이상 1초 대기열 등록, 회복 즉시 등록 검증
-- SQLite 진행 상태 재개, 대기열 상한 및 거절 횟수 기록 검증
-- 전송 실패 중 측정 진행, 안정적인 재전송 payload, 복구 후 대기열 소진 검증
-- 짧은 시간 기반 JSON으로 실제 collector CLI → MN → 분석 → IN → 대시보드 및 재시작 중복 방지 검증
-- 실제 센서/전력 소비/사용자 ACME 환경의 타이밍은 미검증
+v4 per-machine adaptive collection:
+- One-second measurements per machine, normal five-second/anomalous one-second enqueueing, and immediate recovery enqueueing verified
+- SQLite progress resumption, outbox limit, and rejected-sample counting verified
+- Measurements continued during delivery failures; stable retry payloads and outbox draining after recovery verified
+- Short timed JSON verified actual collector CLI → MN → analysis → IN → dashboard and restart deduplication
+- Physical sensors, power consumption, and timing in the user's ACME environment were not tested
 
 2026-11-18 role-based ACP implementation
 - QF_ACP_ENABLED defaults to 0 to preserve existing development commands.

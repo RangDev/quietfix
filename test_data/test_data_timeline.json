@@ -3,7 +3,7 @@
   "frames": [
     {
       "machine_id": "machine-01",
-      "machine_name": "기계 1",
+      "machine_name": "Machine 1",
       "temperature_c": 46,
       "vibration_rms_mm_s": 2.0,
       "current_a": 3.0,
@@ -11,7 +11,7 @@
     },
     {
       "machine_id": "machine-02",
-      "machine_name": "기계 2",
+      "machine_name": "Machine 2",
       "temperature_c": 47,
       "vibration_rms_mm_s": 2.0,
       "current_a": 3.0,
@@ -19,7 +19,7 @@
     },
     {
       "machine_id": "machine-03",
-      "machine_name": "기계 3",
+      "machine_name": "Machine 3",
       "temperature_c": 46,
       "vibration_rms_mm_s": 2.0,
       "current_a": 4.0,
@@ -27,7 +27,7 @@
     },
     {
       "machine_id": "machine-04",
-      "machine_name": "기계 4",
+      "machine_name": "Machine 4",
       "temperature_c": 47,
       "vibration_rms_mm_s": 2.0,
       "current_a": 4.0,
@@ -35,7 +35,7 @@
     },
     {
       "machine_id": "machine-05",
-      "machine_name": "기계 5",
+      "machine_name": "Machine 5",
       "temperature_c": 48,
       "vibration_rms_mm_s": 2.0,
       "current_a": 4.0,
@@ -43,7 +43,7 @@
     },
     {
       "machine_id": "machine-06",
-      "machine_name": "기계 6",
+      "machine_name": "Machine 6",
       "temperature_c": 49,
       "vibration_rms_mm_s": 2.0,
       "current_a": 4.0,
@@ -51,7 +51,7 @@
     },
     {
       "machine_id": "machine-07",
-      "machine_name": "기계 7",
+      "machine_name": "Machine 7",
       "temperature_c": 50,
       "vibration_rms_mm_s": 2.0,
       "current_a": 4.0,
@@ -59,7 +59,7 @@
     },
     {
       "machine_id": "machine-08",
-      "machine_name": "기계 8",
+      "machine_name": "Machine 8",
       "temperature_c": 51,
       "vibration_rms_mm_s": 2.0,
       "current_a": 4.0,
@@ -67,7 +67,7 @@
     },
     {
       "machine_id": "machine-03",
-      "machine_name": "기계 3",
+      "machine_name": "Machine 3",
       "temperature_c": 82,
       "vibration_rms_mm_s": 8.5,
       "current_a": 6.5,
@@ -75,7 +75,7 @@
     },
     {
       "machine_id": "machine-03",
-      "machine_name": "기계 3",
+      "machine_name": "Machine 3",
       "temperature_c": 46,
       "vibration_rms_mm_s": 2.0,
       "current_a": 4.0,
@@ -83,7 +83,7 @@
     },
     {
       "machine_id": "machine-06",
-      "machine_name": "기계 6",
+      "machine_name": "Machine 6",
       "temperature_c": 82,
       "vibration_rms_mm_s": 8.5,
       "current_a": 6.5,
@@ -91,7 +91,7 @@
     },
     {
       "machine_id": "machine-06",
-      "machine_name": "기계 6",
+      "machine_name": "Machine 6",
       "temperature_c": 49,
       "vibration_rms_mm_s": 2.0,
       "current_a": 4.0,
@@ -99,7 +99,7 @@
     },
     {
       "machine_id": "machine-09",
-      "machine_name": "기계 9",
+      "machine_name": "Machine 9",
       "temperature_c": 52,
       "vibration_rms_mm_s": 2.0,
       "current_a": 4.0,
@@ -107,7 +107,7 @@
     },
     {
       "machine_id": "machine-09",
-      "machine_name": "기계 9",
+      "machine_name": "Machine 9",
       "temperature_c": 82,
       "vibration_rms_mm_s": 8.5,
       "current_a": 6.5,
@@ -115,7 +115,7 @@
     },
     {
       "machine_id": "machine-09",
-      "machine_name": "기계 9",
+      "machine_name": "Machine 9",
       "temperature_c": 52,
       "vibration_rms_mm_s": 2.0,
       "current_a": 4.0,
@@ -123,7 +123,7 @@
     },
     {
       "machine_id": "machine-04",
-      "machine_name": "기계 4",
+      "machine_name": "Machine 4",
       "temperature_c": 82,
       "vibration_rms_mm_s": 8.5,
       "current_a": 6.5,
@@ -131,7 +131,7 @@
     },
     {
       "machine_id": "machine-04",
-      "machine_name": "기계 4",
+      "machine_name": "Machine 4",
       "temperature_c": 47,
       "vibration_rms_mm_s": 2.0,
       "current_a": 4.0,
@@ -139,7 +139,7 @@
     },
     {
       "machine_id": "machine-08",
-      "machine_name": "기계 8",
+      "machine_name": "Machine 8",
       "temperature_c": 82,
       "vibration_rms_mm_s": 8.5,
       "current_a": 6.5,
@@ -147,7 +147,7 @@
     },
     {
       "machine_id": "machine-08",
-      "machine_name": "기계 8",
+      "machine_name": "Machine 8",
       "temperature_c": 51,
       "vibration_rms_mm_s": 2.0,
       "current_a": 4.0,

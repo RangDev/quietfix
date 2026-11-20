@@ -1,36 +1,36 @@
-# 구역별 머신 카드와 상세 패널
+# Machine Cards by Zone and Detail Panel
 
-대시보드는 IN-CSE에서 머신 데이터와 분석 결과를 조회한다.
+The dashboard retrieves machine data and analysis results from IN-CSE.
 
-기본 카드는 머신 이름·식별자·분석 상태만 표시한다. 정상은 초록색, 이상 감지는 붉은색이며 미판정·수신 대기·분석 대기는 회색이다. 카드 선택 시 오른쪽 패널에 센서값·단위·센서별 판정·분석 방식·측정/전송 시각·sample_id를 표시한다. 모바일에서는 상세 패널이 카드 위에 나타난다. 닫기 버튼이나 Escape로 닫고 Enter/Space로 카드를 선택할 수 있다. 자동 조회 중에도 선택과 키보드 초점을 유지한다.
+Cards show only the machine name, identifier, and analysis status. Normal is green, detected anomalies are red, and unassessed, awaiting-data, and pending-analysis states are gray. Selecting a card opens sensor values, units, per-sensor results, analysis method, measurement/delivery times, and sample_id in the right panel. On mobile, the panel appears above the cards. Close it with the close button or Escape; select cards with Enter/Space. Selection and keyboard focus persist across automatic refreshes.
 
-`dashboard_sections.json`은 기본적으로 collector-01의 machine-01~04를 A 구역, machine-05~08을 B 구역으로 배정한다. 같은 머신 ID라도 수집기가 다르면 다른 머신이다. 배정되지 않은 새 머신은 미배정에 자동 표시한다. 빈 구역은 표시하지 않는다. 실제 명칭·배정은 다음 형식으로 수정한다.
+By default, `dashboard_sections.json` assigns collector-01 machines machine-01 through machine-04 to Zone A and machine-05 through machine-08 to Zone B. Identical machine IDs under different collectors identify different machines. New unassigned machines appear automatically under Unassigned. Empty zones are hidden. Edit names and assignments using this format:
 
 ```json
-{"sections":[{"id":"line-a","name":"A 생산라인","machines":[{"collector_id":"collector-01","machine_id":"machine-01"}]}]}
+{"sections":[{"id":"line-a","name":"Production Line A","machines":[{"collector_id":"collector-01","machine_id":"machine-01"}]}]}
 ```
 
-다른 파일을 사용하려면 대시보드 프로세스에 `QF_DASHBOARD_SECTIONS=/absolute/path/sections.json`을 지정한다. 설정은 조회 때 다시 읽으므로 실행 중 배정 변경도 반영된다. 같은 머신 중복 배정이나 중복 구역 ID는 오류로 처리한다. 오류 때 마지막 정상 조회 데이터가 있으면 유지하면서 오류임을 표시한다. `unassigned` ID는 미배정용 예약어다.
+To use another file, set `QF_DASHBOARD_SECTIONS=/absolute/path/sections.json` for the dashboard process. Configuration is reread on queries, so assignments can change during execution. Duplicate machine assignments and zone IDs are errors. If a query fails, the last valid data is retained with an error indication. The `unassigned` ID is reserved.
 
-카드를 초록색으로 보이는 것은 마지막 유효 분석이 정상이라는 뜻이며 장비 전원·프로그램 생존 상태를 보장하지 않는다. 조회 실패 때는 기존 초록색/붉은색 카드를 회색 조회 오류 상태로 표시하고 이전 판정을 보조 문구로 남긴다. 센서 미판정은 상세 패널에서 구분한다. 개별 샘플의 경과 시간에 따른 상태 판정과 별도 헬스 모니터는 지원하지 않는다.
+A green card means the last valid analysis was normal; it does not guarantee machine power or application health. Query failures turn existing green/red cards gray and retain the previous result as secondary text. Unassessed sensors are distinguished in the detail panel. Per-sample age-based health classification and a separate health monitor are not supported.
 
-실행: 전체 apps 디렉터리를 함께 갱신하고 기존 `python apps/dashboard.py` 명령으로 재시작한다. Python 코드와 함께 dashboard.html 및 dashboard_sections.json도 배포해야 한다. 기본 배정 설정 외 센서 JSON 수정은 필요 없다.
+Execution: update the entire apps directory and restart with `python apps/dashboard.py`. Deploy dashboard.html and dashboard_sections.json with the Python code. No sensor JSON changes are needed beyond the default assignment configuration.
 
-검증: 일반 unittest 테스트는 설정과 기존 수집·분석·조회 회귀를 검사한다. 선택적 `QF_RUN_UI=1 python -m unittest discover -s tests -p test_dashboard_ui.py -v`는 Playwright Chromium이 필요하며 카드 수치 숨김, 구역/미배정, 상세 선택과 갱신, 초점/키보드, 연결 오류, 모바일 가로 넘침을 검사한다. 시스템 브라우저를 쓰려면 QF_CHROMIUM=/path/to/chromium을 지정한다. UI 테스트는 모의 API를 사용한다.
+Validation: standard unittest tests check configuration and collection/analysis/query regressions. Optional `QF_RUN_UI=1 python -m unittest discover -s tests -p test_dashboard_ui.py -v` requires Playwright Chromium and checks hidden card values, zones/Unassigned, detail selection and updates, focus/keyboard behavior, connection errors, and mobile horizontal overflow. Set QF_CHROMIUM=/path/to/chromium to use a system browser. UI tests use a mocked API.
 
 
-## 분석 결과 갱신
+## Analysis Result Updates
 
-새 측정값을 기다리는 동안 머신 상태는 같은 수집기·머신의 마지막 분석 판정을 유지한다.
-최초 결과가 없으면 분석 대기이며, 정상으로 간주하지 않는다. 새 결과가 도착하면
-정상·이상·미판정 상태를 갱신한다. 분석 결과가 최신 측정값보다 이전이면
-카드에 “최신값 분석 중 · 마지막 판정 기준”을 표시한다.
+While awaiting new analysis, each machine retains the last result for the same collector and machine.
+If no initial result exists, analysis is pending and is not treated as normal. New results update
+the normal, anomalous, or unassessed status. When analysis predates the latest measurement,
+the card shows “Analyzing latest data · Last known result”.
 
-분석 대상 측정 시각으로부터 기본 60초가 지나면 “분석 지연”을 표시한다.
-최초 분석 결과가 없으면 대시보드에서 대기를 시작한 시점도 함께 추적한다.
-새 측정값이 계속 들어와도 60초 이상 최초 결과가 없으면 지연으로 표시한다.
-설정은 `QF_ANALYSIS_STALE_SECONDS`이다.
-지연 중에도 마지막 판정은 유지하지만 현재 상태를 확정하는 의미는 아니다.
-상세 패널은 최신 측정 시각·샘플과 분석 대상 측정 시각·샘플을 구분한다.
-샘플이 다르면 최신 센서값에 이전 센서별 판정을 붙이지 않고 분석 대기로 표시한다.
-조회 오류 시에는 기존과 같이 회색 조회 오류 및 마지막 판정을 표시한다.
+“Analysis delayed” appears after the default 60 seconds from the analyzed measurement time.
+If no initial result exists, the dashboard also tracks when it began waiting.
+Even if new readings keep arriving, no initial result for 60 seconds triggers the delayed indication.
+Configure this through `QF_ANALYSIS_STALE_SECONDS`.
+The last result remains during delays but does not establish the current status.
+The detail panel separates the latest measurement time/sample from the analyzed time/sample.
+When samples differ, latest sensor values show analysis pending rather than receiving previous per-sensor results.
+Query errors retain the gray query-error state and previous result.
