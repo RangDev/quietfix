@@ -1,176 +1,157 @@
 {
-  "duration_seconds": 40,
+  "duration_seconds": 300,
   "frames": [
     {
       "machine_id": "machine-01",
       "machine_name": "기계 1",
-      "temperature_c": 42,
-      "vibration_rms_mm_s": 2,
-      "current_a": 4,
+      "temperature_c": 46,
+      "vibration_rms_mm_s": 2.0,
+      "current_a": 3.0,
       "at_seconds": 0
     },
     {
       "machine_id": "machine-02",
       "machine_name": "기계 2",
-      "temperature_c": 48,
-      "vibration_rms_mm_s": 3,
-      "current_a": 5,
+      "temperature_c": 47,
+      "vibration_rms_mm_s": 2.0,
+      "current_a": 3.0,
       "at_seconds": 0
     },
     {
       "machine_id": "machine-03",
-      "machine_name": "기계 3 · 신규 설비",
-      "sensors": [
-        {
-          "sensor_id": "motor-temp",
-          "type": "temperature",
-          "label": "모터 온도",
-          "value": 65,
-          "unit": "°C"
-        },
-        {
-          "sensor_id": "bearing-temp",
-          "type": "temperature",
-          "label": "베어링 온도",
-          "value": 78,
-          "unit": "°C"
-        },
-        {
-          "sensor_id": "vibration",
-          "type": "vibration_rms",
-          "label": "진동 RMS",
-          "value": 7.2,
-          "unit": "mm/s"
-        },
-        {
-          "sensor_id": "current",
-          "type": "current",
-          "label": "전류",
-          "value": 6,
-          "unit": "A"
-        }
-      ],
+      "machine_name": "기계 3",
+      "temperature_c": 46,
+      "vibration_rms_mm_s": 2.0,
+      "current_a": 4.0,
       "at_seconds": 0
-    },
-    {
-      "machine_id": "machine-03",
-      "machine_name": "기계 3 · 신규 설비",
-      "sensors": [
-        {
-          "sensor_id": "motor-temp",
-          "type": "temperature",
-          "label": "모터 온도",
-          "value": 62,
-          "unit": "°C"
-        },
-        {
-          "sensor_id": "bearing-temp",
-          "type": "temperature",
-          "label": "베어링 온도",
-          "value": 69,
-          "unit": "°C"
-        },
-        {
-          "sensor_id": "vibration",
-          "type": "vibration_rms",
-          "label": "진동 RMS",
-          "value": 3.2,
-          "unit": "mm/s"
-        },
-        {
-          "sensor_id": "current",
-          "type": "current",
-          "label": "전류",
-          "value": 5.1,
-          "unit": "A"
-        },
-        {
-          "sensor_id": "pressure",
-          "type": "pressure",
-          "label": "신규 압력 센서",
-          "value": 2.4,
-          "unit": "bar"
-        }
-      ],
-      "at_seconds": 20
     },
     {
       "machine_id": "machine-04",
-      "machine_name": "기계 4 · 압력 설비",
-      "sensors": [
-        {
-          "sensor_id": "pressure",
-          "type": "pressure",
-          "label": "압력",
-          "value": 3.2,
-          "unit": "bar"
-        }
-      ],
+      "machine_name": "기계 4",
+      "temperature_c": 47,
+      "vibration_rms_mm_s": 2.0,
+      "current_a": 4.0,
       "at_seconds": 0
     },
     {
       "machine_id": "machine-05",
       "machine_name": "기계 5",
-      "temperature_c": 45,
-      "vibration_rms_mm_s": 2,
-      "current_a": 4,
-      "at_seconds": 0
-    },
-    {
-      "machine_id": "machine-06",
-      "machine_name": "기계 6",
-      "temperature_c": 46,
-      "vibration_rms_mm_s": 2,
-      "current_a": 4,
-      "at_seconds": 0
-    },
-    {
-      "machine_id": "machine-06",
-      "machine_name": "기계 6",
-      "temperature_c": 82,
-      "vibration_rms_mm_s": 9,
-      "current_a": 7,
-      "at_seconds": 10
-    },
-    {
-      "machine_id": "machine-06",
-      "machine_name": "기계 6",
       "temperature_c": 48,
-      "vibration_rms_mm_s": 2,
-      "current_a": 4,
-      "at_seconds": 25
+      "vibration_rms_mm_s": 2.0,
+      "current_a": 4.0,
+      "at_seconds": 0
+    },
+    {
+      "machine_id": "machine-06",
+      "machine_name": "기계 6",
+      "temperature_c": 49,
+      "vibration_rms_mm_s": 2.0,
+      "current_a": 4.0,
+      "at_seconds": 0
     },
     {
       "machine_id": "machine-07",
       "machine_name": "기계 7",
-      "temperature_c": 47,
-      "vibration_rms_mm_s": 2,
-      "current_a": 4,
+      "temperature_c": 50,
+      "vibration_rms_mm_s": 2.0,
+      "current_a": 4.0,
       "at_seconds": 0
     },
     {
       "machine_id": "machine-08",
       "machine_name": "기계 8",
-      "temperature_c": 48,
-      "vibration_rms_mm_s": 2,
-      "current_a": 4,
+      "temperature_c": 51,
+      "vibration_rms_mm_s": 2.0,
+      "current_a": 4.0,
       "at_seconds": 0
+    },
+    {
+      "machine_id": "machine-03",
+      "machine_name": "기계 3",
+      "temperature_c": 82,
+      "vibration_rms_mm_s": 8.5,
+      "current_a": 6.5,
+      "at_seconds": 30
+    },
+    {
+      "machine_id": "machine-03",
+      "machine_name": "기계 3",
+      "temperature_c": 46,
+      "vibration_rms_mm_s": 2.0,
+      "current_a": 4.0,
+      "at_seconds": 45
+    },
+    {
+      "machine_id": "machine-06",
+      "machine_name": "기계 6",
+      "temperature_c": 82,
+      "vibration_rms_mm_s": 8.5,
+      "current_a": 6.5,
+      "at_seconds": 90
+    },
+    {
+      "machine_id": "machine-06",
+      "machine_name": "기계 6",
+      "temperature_c": 49,
+      "vibration_rms_mm_s": 2.0,
+      "current_a": 4.0,
+      "at_seconds": 105
+    },
+    {
+      "machine_id": "machine-09",
+      "machine_name": "기계 9",
+      "temperature_c": 52,
+      "vibration_rms_mm_s": 2.0,
+      "current_a": 4.0,
+      "at_seconds": 120
+    },
+    {
+      "machine_id": "machine-09",
+      "machine_name": "기계 9",
+      "temperature_c": 82,
+      "vibration_rms_mm_s": 8.5,
+      "current_a": 6.5,
+      "at_seconds": 150
+    },
+    {
+      "machine_id": "machine-09",
+      "machine_name": "기계 9",
+      "temperature_c": 52,
+      "vibration_rms_mm_s": 2.0,
+      "current_a": 4.0,
+      "at_seconds": 165
+    },
+    {
+      "machine_id": "machine-04",
+      "machine_name": "기계 4",
+      "temperature_c": 82,
+      "vibration_rms_mm_s": 8.5,
+      "current_a": 6.5,
+      "at_seconds": 210
+    },
+    {
+      "machine_id": "machine-04",
+      "machine_name": "기계 4",
+      "temperature_c": 47,
+      "vibration_rms_mm_s": 2.0,
+      "current_a": 4.0,
+      "at_seconds": 225
     },
     {
       "machine_id": "machine-08",
       "machine_name": "기계 8",
       "temperature_c": 82,
-      "vibration_rms_mm_s": 9,
-      "current_a": 7,
-      "at_seconds": 10
+      "vibration_rms_mm_s": 8.5,
+      "current_a": 6.5,
+      "at_seconds": 270
     },
     {
       "machine_id": "machine-08",
       "machine_name": "기계 8",
-      "temperature_c": 48,
-      "vibration_rms_mm_s": 2,
-      "current_a": 4,
-      "at_seconds": 25
+      "temperature_c": 51,
+      "vibration_rms_mm_s": 2.0,
+      "current_a": 4.0,
+      "at_seconds": 285
     }
   ]
 }

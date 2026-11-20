@@ -12,8 +12,21 @@ class Adaptive(unittest.TestCase):
     def test_default_eight_machines_from_start(self):
         timeline=Timeline(DATA.parent/'test_data_timeline.json')
         self.assertEqual({r['machine_id'] for r in timeline.read(0)}, {f'machine-{i:02}' for i in range(1,9)})
-        self.assertEqual(len(timeline.read(39)),8)
-        self.assertEqual(len(timeline.read(40)),8)
+        self.assertEqual(timeline.duration,300)
+        self.assertEqual(len(timeline.read(119)),8)
+        self.assertEqual(len(timeline.read(120)),9)
+        self.assertEqual(len(timeline.read(299)),9)
+        self.assertEqual(len(timeline.read(300)),8)
+        from adaptive_collector import status_of
+        starts=[];previous=set()
+        for second in range(300):
+            abnormal={r['machine_id'] for r in timeline.read(second) if status_of(r)=='abnormal'}
+            self.assertLessEqual(len(abnormal),1)
+            if abnormal-previous:starts.append((second,next(iter(abnormal))))
+            previous=abnormal
+        self.assertEqual(starts,[(30,'machine-03'),(90,'machine-06'),(150,'machine-09'),
+                                 (210,'machine-04'),(270,'machine-08')])
+        self.assertFalse(previous)
     def test_machine_periods_transitions_and_restart(self):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'state.db'; store=Store(path); timeline=Timeline(DATA)
@@ -61,4 +74,5 @@ class Adaptive(unittest.TestCase):
             self.assertGreater(store.load('t')['dropped'],0)
             store.db.close()
 if __name__=='__main__':unittest.main()
+
 
