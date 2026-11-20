@@ -1,4 +1,4 @@
-# QuietFix
+# QuietFix — oneM2M 전용 브랜치
 
 oneM2M 기반 설비 모니터링 개발 프로토타입입니다.
 
@@ -7,11 +7,15 @@ oneM2M 기반 설비 모니터링 개발 프로토타입입니다.
 
 수집기 하나가 여러 머신과 센서를 관리하며, 새 머신·센서는 등록 후 분석·전달·대시보드에 자동 반영됩니다. 확장 테스트: `test_data/test_data_expanded.json`.
 
-현재 분석은 온도 75°C 이상 또는 진동 RMS 7 mm/s 이상이면 이상으로 판정하는 규칙 방식입니다. 실제 ACME·MEC 환경의 연동 검증은 별도로 필요합니다.
+현재 분석은 온도 75°C 이상 또는 진동 RMS 7 mm/s 이상이면 이상으로 판정하는 규칙 방식입니다. MEC 없이 독립 ACME를 사용합니다.
 
 환경 설정 파일, 실행 DB, 가상환경은 Git에 포함하지 않습니다.
 
-## 시작하기
+## 기본 실행: MEC 없는 ACME
+
+[standalone/README.md](standalone/README.md)의 준비·IN/MN 실행·Mcc 확인·앱 실행 순서를 따르세요. Kubernetes나 MEC Sandbox는 필요하지 않습니다.
+
+## 기존 CSE에 앱만 연결하기
 
 기존 ACME MN-CSE·IN-CSE가 실행 중이어야 합니다. 이미 사용하는 `session.env`가 있으면 그대로 사용하세요. 새 환경에서는 `.env.example`을 `session.env`로 복사하고 실제 주소와 CSEBase를 입력합니다.
 

@@ -96,3 +96,13 @@ Eight-machine defaults and dataset cleanup (2026-11-18)
 - Unreferenced legacy/quietfix.py removed. Runtime dataset paths/docs updated.
 - Full unittest discovery: 57 tests, 54 passed, 3 optional integrations skipped.
 - compileall and git diff --check passed. User VM deployment not performed.
+
+Standalone oneM2M branch (2026-11-20)
+- ACME 2025.11 IN and MN run as loopback Python processes without MEC/K8s.
+- Generated TinyDB configuration and custom FCNT model; separate runtime directories.
+- Actual CSE cst=1/2, MN registration and IN -> Mcc -> MN retrieval passed.
+- Default eight-machine timeline snapshots: publish, analysis, central archive and
+  dashboard API returned eight machines on actual standalone CSEs.
+- unittest: 57 tests, 54 passed, 3 optional skipped; compileall/diff checks passed.
+- TinyDB persistence configured; full reboot/restart and long-load tests not claimed.
+- Forwarder archive retained. User VM and original MEC deployment not modified.
