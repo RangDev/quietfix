@@ -10,7 +10,7 @@
 | 새 머신의 첫 측정값 | 수집기가 자신의 AE 아래 머신 컨테이너, telemetry, metadata를 자동 생성 |
 | 새 센서의 첫 측정값 | 센서 ID·종류·표시명·단위를 머신 metadata에 추가 |
 | 분석기 폴링 | MN의 `quietfix-machine-v3` 라벨을 검색, 발견한 모든 머신의 샘플을 분석 |
-| 전달기 폴링 | 머신·센서 목록과 원본을 IN에 전달, 저장 공간도 자동 생성 |
+| 백업 관리 AE 폴링 | 머신·센서 목록과 원본을 IN에 전달, 저장 공간도 자동 생성 |
 | 대시보드 폴링 | IN에서 머신을 검색, 머신 카드와 센서 항목을 자동 구성 |
 
 머신/센서별로 코드나 고정 목록을 수정할 필요가 없습니다. 센서는 AE가 아니며 머신도 컨테이너로 표현합니다. 실제 물리 센서의 USB·무선 연결 탐지/드라이버는 포함하지 않습니다. 현재는 JSON 어댑터가 읽은 `machine_id`와 `sensors`로 장치 인식을 모사합니다.
@@ -37,7 +37,7 @@ IN에서도 수집기 ID를 경로에 포함하므로 서로 다른 수집기에
 
 폴더명이 `apps_split`에서 `apps`로 변경되었습니다. 기본 상태 경로를 사용하던 환경은 앱을 모두 중지한 뒤, Git 갱신 후 남아 있는 `apps_split/state/`를 `apps/state/`로 옮기면 진행 상태를 이어갈 수 있습니다. 대상 상태 폴더가 이미 있다면 덮어쓰지 마세요. `QF_STATE_DIR`를 별도 지정했다면 기존 경로를 유지합니다. 서비스/스크립트의 실행 경로도 `apps/`로 수정하세요.
 
-실행 중인 기존 분리 앱 4개(수집기·분석기·전달기·대시보드)를 Ctrl+C로 중지하고 저장소를 갱신합니다. 기존 통합본도 동시에 실행하지 마세요. 기존 CSE는 계속 실행합니다.
+실행 중인 기존 분리 앱 4개(수집기·분석기·백업 관리 AE·대시보드)를 Ctrl+C로 중지하고 저장소를 갱신합니다. 기존 통합본도 동시에 실행하지 마세요. 기존 CSE는 계속 실행합니다.
 
 ```bash
 git pull --ff-only
@@ -52,7 +52,7 @@ export QF_COLLECTOR_ID=collector-01
 
 ```bash
 .venv/bin/python apps/analyzer_ae.py
-.venv/bin/python apps/forwarder_ae.py
+.venv/bin/python apps/backup_ae.py
 .venv/bin/python apps/dashboard.py
 .venv/bin/python apps/collector_ae.py --dataset test_data/test_data_expanded.json --interval 5 --replay-id dynamic01
 ```
@@ -63,7 +63,7 @@ export QF_COLLECTOR_ID=collector-01
 
 한 바퀴만 보내려면 `--cycles 1`, 같은 데이터셋을 처음부터 다시 보내려면 새로운 `--replay-id`를 지정합니다. 같은 ID와 파일은 재시작 시 중단 위치부터 이어갑니다. 기본은 무한 반복이며 전송 직전에 UTC 시각을 생성합니다. 실패한 행은 같은 ID·시각으로 재시도합니다.
 
-JSON 파일은 수집기 시작 시 읽습니다. 파일에 머신/센서를 추가한 경우 **수집기만 재시작**하면 됩니다. 분석기·전달기·대시보드는 실행 중인 채 새 목록을 다음 폴링에 반영합니다. 실제 드라이버를 연결할 때는 `resource_registry.publish(client, sample)`에 같은 형식의 샘플을 넘깁니다.
+JSON 파일은 수집기 시작 시 읽습니다. 파일에 머신/센서를 추가한 경우 **수집기만 재시작**하면 됩니다. 분석기·백업 관리 AE·대시보드는 실행 중인 채 새 목록을 다음 폴링에 반영합니다. 실제 드라이버를 연결할 때는 `resource_registry.publish(client, sample)`에 같은 형식의 샘플을 넘깁니다.
 
 ## JSON 형식
 
@@ -103,9 +103,9 @@ JSON 파일은 수집기 시작 시 읽습니다. 파일에 머신/센서를 추
 
 기존 `<MN_BASE>/collector-01/telemetry`, `collector-02/telemetry`, IN의 직접 머신 컨테이너는 삭제하지 않습니다. 새 앱은 라벨이 붙은 v3 머신만 처리/표시하며 **기존 원본 데이터의 자동 이관은 하지 않습니다**. 새 수집기를 실행하면 새 경로에 데이터가 쌓입니다. 공유 results에 남은 이전 이상 이력은 기존 알림으로 표시될 수 있습니다.
 
-수집기 상태 파일은 `state/collector-<수집기ID>.sqlite3`, 샘플/체크포인트 키는 v3로 구분합니다. 따라서 업그레이드 첫 실행은 기존 데이터셋도 처음부터 전송합니다. 분석기와 전달기는 기존 SQLite를 재사용하되 v3 키로 구분합니다. `.venv`, `session.env`, `state/`, 실행 DB는 Git에 올리지 않습니다. CSE DB를 초기화했다면 앱을 모두 중지한 뒤 새 `QF_STATE_DIR`와 replay-id를 사용하세요.
+수집기 상태 파일은 `state/collector-<수집기ID>.sqlite3`, 샘플/체크포인트 키는 v3로 구분합니다. 따라서 업그레이드 첫 실행은 기존 데이터셋도 처음부터 전송합니다. 분석기와 백업 관리 AE는 기존 SQLite를 재사용하되 v3 키로 구분합니다. `.venv`, `session.env`, `state/`, 실행 DB는 Git에 올리지 않습니다. CSE DB를 초기화했다면 앱을 모두 중지한 뒤 새 `QF_STATE_DIR`와 replay-id를 사용하세요.
 
-여러 수집기는 서로 다른 `QF_COLLECTOR_ID`를 사용해야 합니다. 같은 수집기 ID의 프로세스를 동시에 여러 개 실행하지 마세요. 실제 배포에서는 앱별 권한/ACP와 인증이 필요하며 현재 CAdmin 설정은 개발용입니다. 수집기/전달기가 신규 리소스를 만들 권한, 분석기/대시보드가 등록 리소스를 검색·조회할 권한이 있어야 합니다.
+여러 수집기는 서로 다른 `QF_COLLECTOR_ID`를 사용해야 합니다. 같은 수집기 ID의 프로세스를 동시에 여러 개 실행하지 마세요. 실제 배포에서는 앱별 권한/ACP와 인증이 필요하며 현재 CAdmin 설정은 개발용입니다. 수집기/백업 관리 AE가 신규 리소스를 만들 권한, 분석기/대시보드가 등록 리소스를 검색·조회할 권한이 있어야 합니다.
 
 ## 검증과 한계
 
@@ -123,7 +123,7 @@ python3 -m unittest discover -s tests -v
 | `device_model.py` | 센서 스키마 검증, 기존 형식 변환, 센서 판정 규칙 |
 | `resource_registry.py` | AE/컨테이너 준비, 머신/센서 목록, 동적 검색 |
 | `analyzer_ae.py` | 등록된 머신 조회·샘플별 분석 |
-| `forwarder_ae.py` | 머신/센서 목록·원본·분석 결과를 IN에 복사 |
+| `backup_ae.py` | 머신/센서 목록·원본·분석 결과를 IN에 복사 |
 | `dashboard.py` | IN만 조회·동적 카드/센서 항목·알림 |
 | `onem2m_client.py` | 공용 HTTP 및 oneM2M 요청 |
 | `worker_state.py` | SQLite에 로컬 진행 상태·전송 대기 기록 |
@@ -131,7 +131,7 @@ python3 -m unittest discover -s tests -v
 
 ## 구독·알림 및 그룹 최신값 조회
 
-분석기와 전달기는 HTTP 알림으로 깨어나 보존된 미처리 샘플을 처리할 수 있습니다. 알림은 처리 시작 신호이며, 실제 데이터는 CSE에서 조회합니다. 기존 SQLite 중복 방지를 유지하고 30초마다 전체 보완 조회를 하므로 알림 누락 시에도 CSE에 남은 데이터를 처리합니다. 이미 삭제된 데이터까지 복구하지는 못합니다. 새 머신 발견·구독 생성도 이 보완 주기에 수행하며, 구독 전 들어온 샘플은 조회로 처리합니다.
+분석기와 백업 관리 AE는 HTTP 알림으로 깨어나 보존된 미처리 샘플을 처리할 수 있습니다. 알림은 처리 시작 신호이며, 실제 데이터는 CSE에서 조회합니다. 기존 SQLite 중복 방지를 유지하고 30초마다 전체 보완 조회를 하므로 알림 누락 시에도 CSE에 남은 데이터를 처리합니다. 이미 삭제된 데이터까지 복구하지는 못합니다. 새 머신 발견·구독 생성도 이 보완 주기에 수행하며, 구독 전 들어온 샘플은 조회로 처리합니다.
 
 `session.env`에 **MN-CSE 컨테이너에서 도달할 수 있는 VM 주소**를 지정하세요. 다음 VM_IP는 실제 주소로 바꿔야 합니다.
 
@@ -141,13 +141,13 @@ export QF_FORWARDER_NOTIFY_URL=http://VM_IP:8092/notify
 export QF_RECONCILE_SECONDS=30
 ```
 
-이후 각 터미널에서 환경을 다시 읽고 기존 명령으로 분석기·전달기를 재시작합니다. 기본 수신 주소는 0.0.0.0, 포트는 각각 8091·8092입니다. 포트 변경은 `QF_ANALYZER_NOTIFY_PORT`, `QF_FORWARDER_NOTIFY_PORT`와 URL을 함께 수정하세요. MN 컨테이너 안의 127.0.0.1은 VM에서 실행하는 앱을 가리키지 않습니다. 해당 포트에 접근할 수 있어야 하고 구독 생성 권한이 필요합니다. 수신기는 구독 생성 전에 시작되며 CSE의 검증 알림에도 응답합니다. URL을 변경하면 다음 구독 확인에서 갱신합니다.
+이후 각 터미널에서 환경을 다시 읽고 기존 명령으로 분석기·백업 관리 AE를 재시작합니다. 기본 수신 주소는 0.0.0.0, 포트는 각각 8091·8092입니다. 포트 변경은 `QF_ANALYZER_NOTIFY_PORT`, `QF_FORWARDER_NOTIFY_PORT`와 URL을 함께 수정하세요. MN 컨테이너 안의 127.0.0.1은 VM에서 실행하는 앱을 가리키지 않습니다. 해당 포트에 접근할 수 있어야 하고 구독 생성 권한이 필요합니다. 수신기는 구독 생성 전에 시작되며 CSE의 검증 알림에도 응답합니다. URL을 변경하면 다음 구독 확인에서 갱신합니다.
 
 URL을 지정하지 않으면 경고 로그를 남기고 기존 `QF_POLL_SECONDS` 간격의 폴링을 사용합니다. URL을 지정했지만 구독 생성이 실패하면 로그를 남기고 30초 보완 조회는 계속합니다. `--once`는 수신 서버나 구독 없이 한 차례 처리합니다. 알림 모드에서는 같은 역할을 한 프로세스로 실행하세요. 알림 수신 포트는 개발 환경의 신뢰할 수 있는 네트워크에만 노출하세요.
 
-분석기는 각 머신 telemetry를, 전달기는 각 머신 telemetry와 MN analyzer/results를 구독합니다. 전달기는 IN의 `archive/telemetryGroup`(ty=9)을 자동 생성·갱신하며, 모든 머신의 telemetry 컨테이너를 멤버로 유지합니다. 대시보드는 `GET <IN_BASE>/archive/telemetryGroup/fopt/la`로 최신 CIN들을 일괄 조회합니다. 그룹이 아직 없거나 일부 멤버가 비어 있으면 해당 머신만 개별 조회합니다. 분석 결과는 같은 sample_id로 연결하며 그룹 조회가 분석기·전달기의 전체 샘플 처리를 대체하지 않습니다. 대시보드는 3초 갱신을 유지합니다.
+분석기는 각 머신 telemetry를, 백업 관리 AE는 각 머신 telemetry와 MN analyzer/results를 구독합니다. 백업 관리 AE는 IN의 `archive/telemetryGroup`(ty=9)을 자동 생성·갱신하며, 모든 머신의 telemetry 컨테이너를 멤버로 유지합니다. 대시보드는 `GET <IN_BASE>/archive/telemetryGroup/fopt/la`로 최신 CIN들을 일괄 조회합니다. 그룹이 아직 없거나 일부 멤버가 비어 있으면 해당 머신만 개별 조회합니다. 분석 결과는 같은 sample_id로 연결하며 그룹 조회가 분석기·백업 관리 AE의 전체 샘플 처리를 대체하지 않습니다. 대시보드는 3초 갱신을 유지합니다.
 
-그룹은 전달기가 관리하므로 대시보드는 IN을 읽기만 합니다. CSE 내부에서는 멤버별로 요청을 수행하며 같은 측정 시각이나 원자적 스냅샷을 보장하지 않습니다. 그룹 생성·갱신이 실패하면 전달기는 오류를 기록하고 데이터 전달을 계속합니다. 이 기능은 별도 DB·MQTT 브로커 없이 HTTP로 동작합니다.
+그룹은 백업 관리 AE가 관리하므로 대시보드는 IN을 읽기만 합니다. CSE 내부에서는 멤버별로 요청을 수행하며 같은 측정 시각이나 원자적 스냅샷을 보장하지 않습니다. 그룹 생성·갱신이 실패하면 백업 관리 AE는 오류를 기록하고 데이터 전달을 계속합니다. 이 기능은 별도 DB·MQTT 브로커 없이 HTTP로 동작합니다.
 
 ## 머신별 적응형 수집 (v4 · 기본 실행)
 
@@ -203,3 +203,8 @@ These are independently configured features. They are not automatically installe
 ## 구역별 대시보드
 
 머신 카드는 정상·이상 등 상태만 표시하고 선택한 머신의 센서값·속성은 상세 패널에서 확인합니다. 구역 배정은 dashboard_sections.json 또는 QF_DASHBOARD_SECTIONS 설정으로 관리하며 기존 센서 JSON은 유지됩니다. [대시보드 안내](DASHBOARD.md)를 참고하세요. 노드·MEC 상태 화면은 추가하지 않았습니다.
+
+
+## oneM2M 전용 브랜치의 백업 경로
+
+`backup_ae.py`는 MN 장비에서 실행하며 측정 원본과 분석 결과를 MN에서 읽는다. IN 사본 저장 요청도 MN URL의 `~/IN-CSE-ID/IN-CSEBase/...`로 보낸다. MN이 Mcc로 전달하므로 백업 AE와 IN 사이에 직접 Mca 연결은 없다. 분석 AE와 백업 AE는 별도 프로그램이다. 초기 권한 설정과 사용자 지정 CSE-ID는 [standalone 가이드](../standalone/README.md)를 따른다. 이전 `forwarder_ae.py` 명령도 같은 백업 실행으로 연결되며 기존 신원·구독·SQLite 상태를 재사용한다.

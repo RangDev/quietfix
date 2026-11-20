@@ -1,5 +1,7 @@
 """Actual standalone ACME smoke test. Stop existing listeners on 8081/9090 first."""
 import subprocess,sys,time,os,tempfile,json,signal,socket
+from unittest.mock import patch
+import requests
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 os.chdir(ROOT)
@@ -33,7 +35,8 @@ try:
  from sensor_simulator import SensorSimulator
  from resource_registry import publish
  from analyzer_ae import step as analyze
- from forwarder_ae import step as forward
+ from backup_ae import step as forward
+ from onem2m_client import ArchiveViaMN
  from worker_state import State
  c.STATE=home/'state'
  from adaptive_collector import Timeline
@@ -42,7 +45,29 @@ try:
  source=SensorSimulator(dataset,'standalone-smoke')
  mn=Client('http://127.0.0.1:8081');central=Client('http://127.0.0.1:9090')
  for i in range(len(source)):publish(mn,source.read_measurements(i))
- analyze(mn,State('analyzer'));forward(mn,central,State('forwarder'))
+ from access_control import provision_backup_route
+ provision_backup_route(mn,central)
+ analyze(mn,State('analyzer'))
+ routed = ArchiveViaMN(mn)
+ request = requests.request
+ def mn_only(method,url,**kwargs):
+  assert url.startswith(mn.url+'/'), 'Backup AE contacted a non-MN endpoint: '+url
+  return request(method,url,**kwargs)
+ with patch('requests.request',side_effect=mn_only):
+  forward(mn,routed,State('forwarder'))
+  forward(mn,routed,State('forwarder'))  # retry/restart is idempotent
+ from access_control import main as apply_acp
+ apply_acp(['--apply'])
+ secure_mn=Client(mn.url,c.role_origin('forwarder'))
+ with patch('requests.request',side_effect=mn_only):
+  forward(secure_mn,ArchiveViaMN(secure_mn),State('secure-backup'))
+ group=central.call('GET',c.IN_BASE+'/archive/telemetryGroup')['m2m:grp']
+ assert len(group['mid'])==8
+ for machine in __import__('resource_registry').discover_machines(Client(mn.url),c.MN_BASE):
+  source_path=machine['path']+'/telemetry'
+  target_path=c.IN_BASE+'/archive/'+machine['collector_id']+'/machine-'+machine['machine_id']+'/telemetry'
+  assert list(Client(mn.url).records(source_path))==list(central.records(target_path))
+ print('PASS backup MN-only HTTP, Mcc archive equality, restart deduplication, group and role ACP')
  from dashboard import snapshot
  assert len(snapshot()['machines'])==8
  print('PASS real ACME publish -> analysis -> archive -> dashboard (8-machine default timeline)')
@@ -53,3 +78,4 @@ finally:
   except subprocess.TimeoutExpired:os.killpg(p.pid,signal.SIGKILL);p.wait()
 
  tmp.cleanup()
+

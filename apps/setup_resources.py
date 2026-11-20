@@ -7,8 +7,10 @@ def main():
     c.require_mn()
     ensure_ae(Client(c.MN_URL), c.MN_BASE, c.COLLECTOR_ID)
     ensure_analyzer(Client(c.MN_URL))
-    ensure_archive(Client(c.IN_URL))
+    from access_control import provision_backup_route
+    provision_backup_route(Client(c.MN_URL), Client(c.IN_URL))
     ensure_ae(Client(c.IN_URL), c.IN_BASE, 'dashboard')
     print('Shared resources ready. Machines/sensors register on first measurement.')
 if __name__ == '__main__':
     main()
+

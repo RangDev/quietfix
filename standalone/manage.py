@@ -67,6 +67,7 @@ type=tinydb
         import shlex
         values={'QF_MN_URL':'http://127.0.0.1:8081','QF_MN_BASE':'quietfix-mn',
                 'QF_IN_URL':'http://127.0.0.1:9090','QF_IN_BASE':'quietfix-in',
+                'QF_IN_CSE_ID':'/id-quietfix-in','QF_MN_CSE_ID':'/id-quietfix-mn',
                 'QF_COLLECTOR_ID':'collector-01','QF_STATE_DIR':str(home/'state'),
                 'QF_ANALYZER_NOTIFY_URL':'http://127.0.0.1:8091/notify',
                 'QF_FORWARDER_NOTIFY_URL':'http://127.0.0.1:8092/notify',
@@ -100,3 +101,4 @@ def main():
         raise SystemExit(subprocess.call([sys.executable,'-m','acmecse','--base-directory',str(home),
                            '--headless','--no-mqtt','--no-coap','--no-ws']))
 if __name__=='__main__':main()
+

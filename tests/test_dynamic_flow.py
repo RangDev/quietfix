@@ -40,7 +40,7 @@ class CSEHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlsplit(self.path)
-        path = parsed.path.strip('/')
+        path = parsed.path.strip('/').removeprefix('~/id-quietfix-in/')
         resources = self.server.resources
         if parsed.query:
             if path not in resources:
@@ -74,7 +74,7 @@ class CSEHandler(BaseHTTPRequestHandler):
         self.reply(200, {kind: resource})
 
     def do_POST(self):
-        parent = self.path.strip('/')
+        parent = self.path.strip('/').removeprefix('~/id-quietfix-in/')
         resources = self.server.resources
         payload = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
         kind, attrs = next(iter(payload.items()))
@@ -100,7 +100,7 @@ class CSEHandler(BaseHTTPRequestHandler):
                         requests.post(url,json={'m2m:sgn':{'sur':key,'nev':{'net':3,'rep':{'m2m:cin':resources.get(target,attrs)}}}},timeout=2)
 
     def do_PUT(self):
-        path=self.path.strip('/')
+        path=self.path.strip('/').removeprefix('~/id-quietfix-in/')
         if path not in self.server.resources:
             return self.reply(404,{})
         payload=json.loads(self.rfile.read(int(self.headers['Content-Length'])))
@@ -351,3 +351,4 @@ class Schema(unittest.TestCase):
 
 if __name__=='__main__':
     unittest.main()
+

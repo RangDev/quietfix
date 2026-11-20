@@ -106,3 +106,14 @@ Standalone oneM2M branch (2026-11-20)
 - unittest: 57 tests, 54 passed, 3 optional skipped; compileall/diff checks passed.
 - TinyDB persistence configured; full reboot/restart and long-load tests not claimed.
 - Forwarder archive retained. User VM and original MEC deployment not modified.
+
+
+2026-11-20 oneM2M-only backup AE via Mcc
+- Real standalone ACME 2025.11 IN/MN: 8 machines publish/analyze/archive/dashboard passed.
+- Backup HTTP requests asserted to use MN endpoint only, including secure role run.
+- Independent IN telemetry equals retained MN telemetry; group contains 8 members.
+- Repeated backup with durable checkpoints and deterministic CIN names passed.
+- Applied role ACPs, replayed retained data through MN/Mcc as Cqfforwarder: passed.
+- unittest: 59 run, 56 passed, 3 optional skipped. Includes failed-write checkpoint and remote-target/current-MN routing contracts.
+- compileall and diff whitespace checks passed.
+- Existing user VM was not modified; TLS/MQTT/UI optional integration was not rerun for this change.

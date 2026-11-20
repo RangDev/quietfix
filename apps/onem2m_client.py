@@ -93,3 +93,36 @@ def close_collector_clients():
         clients=list(_collector_clients.values());_collector_clients.clear()
     for client in clients:client.close()
 atexit.register(close_collector_clients)
+
+
+
+class ArchiveViaMN(Client):
+    """IN resource operations sent exclusively to the current MN HTTP endpoint.
+
+    Keep the local origin on Mca: the MN qualifies it before Mcc forwarding.
+    The source client is shared so controlled MN handover also changes this route.
+    """
+    def __init__(self, mn):
+        self.mn = mn
+        super().__init__(mn.url, mn.origin)
+
+    def call(self, method, path, body=None, ty=None, origin=None):
+        # Local IN structured paths and SP-relative discovery URIs are both valid.
+        target = path.lstrip('/')
+        if target.startswith('~/'):
+            target = target[2:]
+        if target == c.IN_BASE or target.startswith(c.IN_BASE+'/') or target.startswith(c.IN_BASE+'?'):
+            target = c.IN_CSE_ID+'/'+target
+        if not (target == c.IN_CSE_ID or target.startswith(c.IN_CSE_ID+'/') or target.startswith(c.IN_CSE_ID+'?')):
+            raise ValueError('Archive request must target the configured IN-CSE')
+        if method == 'POST' and ty in (3, 9, 24, 28) and body:
+            # Explicit policies keep remotely created resources maintainable by IN admin.
+            from access_control import policy_ref
+            policy = 'group' if ty == 9 else 'archive-fcnt' if ty in (24, 28) else 'archive'
+            kind, attrs = next(iter(body.items()))
+            attrs = {**attrs, 'acpi': [policy_ref(c.IN_BASE, policy)]}
+            if ty == 9:
+                attrs['macp'] = [policy_ref(c.IN_BASE, 'group')]
+            body = {kind: attrs}
+        self.url = self.mn.url
+        return super().call(method, '~/'+target, body, ty, origin)

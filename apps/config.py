@@ -57,3 +57,8 @@ SEMANTIC_ENABLED = os.getenv('QF_SEMANTIC_ENABLED') == '1'
 
 if SEMANTIC_ENABLED and not FLEX_ENABLED:
     raise ValueError('Semantic mode requires QF_FLEX_ENABLED=1')
+
+
+# SP-relative CSE IDs for Mcc routing (not HTTP endpoints).
+IN_CSE_ID = os.getenv('QF_IN_CSE_ID', '/id-quietfix-in').strip('/')
+MN_CSE_ID = os.getenv('QF_MN_CSE_ID', '/id-quietfix-mn').strip('/')

@@ -26,11 +26,13 @@ source session.env
 .venv/bin/python apps/setup_resources.py
 ```
 
-각 터미널에서 `source session.env`를 실행한 뒤 분석기, 전달기, 대시보드, 수집기를 각각 실행합니다.
+최초 실행/업그레이드는 [oneM2M 전용 가이드](standalone/README.md)에 따라 `apps/setup_resources.py`로 중앙 권한을 준비한다. 백업 경로는 **AE 백업 관리 → Mca → MN-CSE → Mcc → IN-CSE**이며, 분석 AE는 분석만 담당한다.
+
+각 터미널에서 `source session.env`를 실행한 뒤 분석기, 백업 관리 AE, 대시보드, 수집기를 각각 실행합니다.
 
 ```bash
 .venv/bin/python apps/analyzer_ae.py
-.venv/bin/python apps/forwarder_ae.py
+.venv/bin/python apps/backup_ae.py
 .venv/bin/python apps/dashboard.py
 .venv/bin/python apps/collector_ae.py --dataset test_data/test_data_expanded.json --interval 5 --replay-id dynamic01
 ```
@@ -43,6 +45,7 @@ source session.env
 
 기존 버전에서 갱신할 때는 앱 4개를 중지하고 전체 `apps/` 파일을 함께 갱신하세요. 새 버전은 머신별 경로를 사용하고 기존 원본을 자동 이관하지 않습니다. 적용·JSON 센서 형식·호환성 안내는 [상세 문서](apps/README.md)를 참고하세요.
 
-구독 알림을 켜려면 `QF_ANALYZER_NOTIFY_URL`과 `QF_FORWARDER_NOTIFY_URL`을 MN-CSE에서 도달 가능한 VM 주소로 지정하세요. 알림 모드는 30초 보완 조회를 병행합니다. 전달기는 IN의 telemetry 그룹을 자동 관리하고 대시보드는 그룹 최신값 조회를 사용합니다. 설정 예시와 폴링 호환 모드는 [apps/README.md](apps/README.md)에 있습니다.
+구독 알림을 켜려면 `QF_ANALYZER_NOTIFY_URL`과 `QF_FORWARDER_NOTIFY_URL`을 MN-CSE에서 도달 가능한 VM 주소로 지정하세요. 알림 모드는 30초 보완 조회를 병행합니다. 백업 관리 AE는 IN의 telemetry 그룹을 자동 관리하고 대시보드는 그룹 최신값 조회를 사용합니다. 설정 예시와 폴링 호환 모드는 [apps/README.md](apps/README.md)에 있습니다.
 
 머신별 적응형 수집은 `.venv/bin/python apps/collector_ae.py --replay-id adaptive01`로 실행합니다. 기본적으로 머신별 1초 측정, 정상 5초/이상 1초 전송, 이상·회복 즉시 전송 대기열 등록을 사용합니다. 기존 `--interval` 명령은 순차 재생 호환 모드입니다. 시간 기반 시나리오와 대기열 정책은 apps/README.md의 v4 절을 참고하세요.
+
