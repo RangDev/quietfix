@@ -3,9 +3,9 @@ import math
 import re
 
 LEGACY = {
-    'temperature_c': ('temperature', '\uc628\ub3c4', '°C'),
-    'vibration_rms_mm_s': ('vibration_rms', '\uc9c4\ub3d9 RMS', 'mm/s'),
-    'current_a': ('current', '\uc804\ub958', 'A'),
+    'temperature_c': ('temperature', 'Temperature', '°C'),
+    'vibration_rms_mm_s': ('vibration_rms', 'Vibration RMS', 'mm/s'),
+    'current_a': ('current', 'Current', 'A'),
 }
 RULES = {'temperature': ('°C', 75), 'vibration_rms': ('mm/s', 7)}
 

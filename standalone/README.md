@@ -1,12 +1,12 @@
-# oneM2M 전용 실행 구성
+# Standalone oneM2M Execution
 
-처음 설치한다면 [통합 배포 가이드](../docs/DEPLOYMENT.md)를 먼저 따릅니다. ML 학습과 전체 서비스 start/stop/status/logs를 포함합니다. 아래는 개별 CSE·AE를 직접 운영할 때의 안내입니다.
+For initial setup, follow the [integrated deployment guide](../docs/DEPLOYMENT.md), including ML training and service start/stop/status/logs. This guide covers manual operation of individual CSEs and AEs.
 
-MEC Sandbox·Kubernetes·OAuth·ingress 없이 ACME IN/MN을 호스트 Python 프로세스로 실행한다. Linux와 Python 3.12 기준, ACME 2025.11 고정이다. DB는 CSE별 TinyDB 파일로 보존한다. 개발용 loopback HTTP/CAdmin 기준선이며 외부 공개용 보안 구성은 아니다.
+ACME IN/MN run as host Python processes without MEC Sandbox, Kubernetes, OAuth, or ingress. The baseline is Linux, Python 3.12, and pinned ACME 2025.11. Each CSE persists its database as a TinyDB file. The loopback HTTP/CAdmin configuration is for development and is not secured for public exposure.
 
-## 준비
+## Preparation
 
-저장소 루트에서:
+From the repository root:
 
 ```bash
 python3 -m venv .venv
@@ -14,11 +14,11 @@ python3 -m venv .venv
 .venv/bin/python standalone/manage.py prepare
 ```
 
-기존 VM의 MEC 설치나 DB는 건드리지 않는다. 8081/8082/9090/8090/8091/8092 포트 충돌 여부를 먼저 확인한다. 기존 앱과 새 앱을 동시에 동일 포트/수집기 ID로 실행하지 않는다. prepare는 기존 acme.ini와 session.env를 덮어쓰지 않는다. 모델 파일은 저장소 버전으로 복사한다. runtime 경로를 이동하거나 venv를 재설치하면 acme.ini의 resourcesPath도 확인한다.
+Existing VM MEC installations and databases are unchanged. Check for conflicts on ports 8081/8082/9090/8090/8091/8092 first. Do not run old and new applications with the same ports/collector IDs simultaneously. prepare preserves existing acme.ini and session.env files. Model files are copied from the repository version. Check resourcesPath in acme.ini after moving runtime directories or reinstalling the virtual environment.
 
-## 실행
+## Execution
 
-각 명령을 별도 터미널에서 실행한다. IN을 먼저 실행하고 MN을 실행한다.
+Run each command in a separate terminal. Start IN before MN.
 
 ```bash
 .venv/bin/python standalone/manage.py in
@@ -26,21 +26,21 @@ python3 -m venv .venv
 .venv/bin/python standalone/manage.py check
 ```
 
-check는 실제 CSE 유형과 IN에서 Mcc 경유 MN 조회를 확인한다. 등록 직후 실패하면 MN/IN 로그를 확인하고 등록 완료 후 다시 실행한다. 다음 앱 터미널마다 저장소 루트에서 환경을 읽는다.
+check verifies actual CSE types and retrieves MN through Mcc from IN. If it fails immediately after registration, inspect MN/IN logs and rerun after registration completes. Load the environment from the repository root in every application terminal.
 
 ```bash
 source runtime/standalone/session.env
 ```
 
-최초 실행 및 기존 버전 업그레이드 때, 워커를 중지하고 관리자 신원으로 다음을 먼저 실행한다.
+On initial setup and upgrades, stop workers and run the following as administrator first.
 
 ```bash
 .venv/bin/python apps/setup_resources.py
 ```
 
-이는 IN archive의 권한에 MN이 전달하는 SP-relative 신원을 허용한다. 실제 데이터 저장 위치는 IN-CSE DB이다. 기존 session.env에는 `QF_IN_CSE_ID=/id-quietfix-in`, `QF_MN_CSE_ID=/id-quietfix-mn`을 추가한다. CSEBase 이름과 CSE-ID는 서로 다른 값이다.
+This permits the SP-relative identity forwarded by MN in the IN archive permissions. Data is physically stored in the IN-CSE database. Add `QF_IN_CSE_ID=/id-quietfix-in` and `QF_MN_CSE_ID=/id-quietfix-mn` to existing session.env files. CSEBase names and CSE-IDs are different values.
 
-그 뒤 아래 명령을 각각 별도 터미널에서 실행한다.
+Then run each command below in a separate terminal.
 
 ```bash
 .venv/bin/python apps/analyzer_ae.py
@@ -49,30 +49,30 @@ source runtime/standalone/session.env
 .venv/bin/python apps/collector_ae.py
 ```
 
-대시보드는 http://127.0.0.1:8090 이다. Windows에서 VM을 사용할 경우 SSH 터널을 이용한다. 기본 8대·A/B 각 4대 구역을 유지한다. 백업 관리 AE는 MN-CSE에만 Mca로 접속한다. 중앙 사본 요청은 MN-CSE가 Mcc로 IN-CSE에 전달한다.
+The dashboard is at http://127.0.0.1:8090. Use an SSH tunnel for a VM accessed from Windows. The default eight machines remain split four each across Zones A/B. The backup management AE connects over Mca only to MN-CSE. MN-CSE forwards central-copy requests over Mcc to IN-CSE.
 
-종료: 수집기 → 분석기/백업 관리 AE/대시보드 → MN → IN 순으로 각 터미널 Ctrl+C. 재실행도 같은 순서를 역순으로 따른다. runtime/standalone 아래 CSE DB와 앱 state를 삭제하지 않는다. 백업은 앱과 CSE를 정상 종료한 뒤 해당 폴더 전체를 복사한다. 기존 MEC 메모리 DB의 데이터 자동 이관은 제공하지 않는다.
+Shutdown: press Ctrl+C in each terminal in collector → analyzer/backup management AE/dashboard → MN → IN order. Restart in reverse order. Do not delete CSE databases or application state under runtime/standalone. Back up the entire folder after cleanly stopping applications and CSEs. Automatic migration from the old MEC in-memory database is not provided.
 
-## 선택 기능
+## Optional Features
 
-- ACP: 환경을 읽고 apps/access_control.py --apply 실행 후 모든 앱에서 QF_ACP_ENABLED=1을 지정한다. apps/ACP.md 참조.
-- FCNT/의미 정보: prepare가 각 CSE의 init에 모델을 복사한다. 로딩 확인 후 apps/FLEX.md와 SEMANTICS.md의 옵션·권한 설정을 따른다.
-- MQTT/mTLS: 독립 기능으로 유지된다. MQTT는 별도 브로커와 ACME 바인딩 설정이 필요하다. manage.py 실행은 기본 --no-mqtt이므로 MQTT 시험 시 이 플래그를 제거하고 인증·CA·브로커 설정을 적용해야 한다. HTTP 게이트웨이는 loopback backend와 사용할 수 있다. CSE의 MQTT/알림 발신 인증서 지원 제약은 MEC 제거만으로 해결되지 않는다. apps/MQTT.md와 security/README.md 참조.
-- 계획된 전환: manage.py backup으로 별도 MN을 실행하고 apps/HANDOVER.md에 따라 공용 QF_ROUTE_FILE·ACP를 준비한다. A가 살아 있을 때 B로 이전한다. 자동 장애 승계가 아니다.
+- ACP: load the environment, run apps/access_control.py --apply, then set QF_ACP_ENABLED=1 for every application. See apps/ACP.md.
+- FCNT/semantic information: prepare copies models into each CSE's init directory. Confirm loading, then follow option/permission setup in apps/FLEX.md and SEMANTICS.md.
+- MQTT/mTLS remain independent features. MQTT requires a separate broker and ACME binding configuration. manage.py defaults to --no-mqtt; remove this flag for MQTT tests and configure authentication, CA, and broker settings. The HTTP gateway supports a loopback backend. Removing MEC does not resolve CSE MQTT/outbound-notification certificate limitations. See apps/MQTT.md and security/README.md.
+- Planned transfer: run another MN with manage.py backup and prepare shared QF_ROUTE_FILE/ACP according to apps/HANDOVER.md. Transfer from A to B while A is alive; this is not automatic failover.
 
-실제 알림·권한·8대 데이터 경로는 앱 로그와 sample_id로 확인한다. 단위 테스트와 실제 CSE 통합 시험은 별도로 수행한다.
+Check actual notifications, permissions, and eight-machine data paths using application logs and sample_id. Run unit tests and actual CSE integration tests separately.
 
-## 재현 가능한 검증
+## Reproducible Validation
 
-기존 CSE를 종료한 뒤 `.venv/bin/python standalone/smoke_test.py`를 실행한다. 8081/9090이 사용 중이면 시험을 거부한다. 임시 폴더에 새 IN/MN과 DB를 만들고 실제 CSE 유형·Mcc 원격 조회·기본 8대의 저장/분석/중앙 사본/대시보드 API를 검사한 뒤 종료한다. 개발용 관리자 신원의 Mcc 시험이며 역할별 보안 검증과는 구분한다. 일반 회귀는 `.venv/bin/python -m unittest discover -s tests -v`이다. 이 시험은 장시간 처리량, 재부팅 보존, 모든 TLS 기능이나 UI 상호작용 검증을 의미하지 않는다.
+Stop existing CSEs and run `.venv/bin/python standalone/smoke_test.py`. The test refuses to run if 8081/9090 are occupied. It creates fresh IN/MN instances and databases in a temporary directory, checks actual CSE types, Mcc remote retrieval, and eight-machine storage/analysis/central copies/dashboard API, then shuts them down. This uses a development administrator identity for Mcc and is separate from role-based security validation. Run standard regressions with `.venv/bin/python -m unittest discover -s tests -v`. This does not establish sustained throughput, persistence across reboot, all TLS features, or UI interaction validation.
 
 
-## 백업 관리 AE와 Mcc
+## Backup Management AE and Mcc
 
-현장 MN 장비에서 AE 분석과 AE 백업 관리를 별도 프로세스로 실행한다. 분석은 측정값 판정과 현장 결과 저장만 담당한다. 백업 관리는 측정 원본·설비/센서 목록·분석 결과를 읽고 독립된 중앙 사본 생성과 재시도를 담당한다.
+Run analysis and backup management AEs as separate processes on the field MN device. Analysis classifies measurements and stores local results. Backup management reads raw measurements, equipment/sensor lists, and analysis results, creates independent central copies, and handles retries.
 
-경로: AE 백업 관리 → Mca → MN-CSE → Mcc → IN-CSE. IN의 archive는 저장용 AE 리소스이며 별도 실행 프로그램이 아니다. MN과 IN 사이에 AE의 직접 Mca 연결을 두지 않는다. 대시보드는 중앙 장비에서 IN에 Mca로 접속한다. 관리자 초기 설정은 두 CSE에 직접 접속하지만 백업 런타임 경로와는 구분된다.
+Path: backup management AE → Mca → MN-CSE → Mcc → IN-CSE. The IN archive is an AE resource for storage, not a separate program. The backup AE has no direct Mca connection to IN. The dashboard connects over Mca to IN on the central device. Administrator provisioning directly accesses both CSEs, separately from the runtime backup path.
 
-실행 파일은 `apps/backup_ae.py`이다. `forwarder_ae.py`는 같은 Mcc 실행을 호출하는 호환 진입점이다. 기존 리소스/ACP/구독/상태의 연속성을 위해 내부 AE 이름 `forwarder`, 신원 `Cqfforwarder`, `QF_FORWARDER_*`, `state/forwarder.sqlite3`를 유지한다. 두 진입점을 동시에 실행하지 않는다. 알림/주기 보완 조회 및 성공 후 체크포인트와 결정적 CIN 이름으로 재시도를 유지한다. 통신 중단 중에는 MN에 보존된 데이터만 나중에 복사할 수 있으므로 보존 한도 초과 전 복구해야 한다.
+The executable is `apps/backup_ae.py`. `forwarder_ae.py` is a compatibility entry point for the same Mcc implementation. Internal AE name `forwarder`, identity `Cqfforwarder`, `QF_FORWARDER_*`, and `state/forwarder.sqlite3` remain for resource/ACP/subscription/state continuity. Do not run both entry points together. Notifications, periodic reconciliation, checkpoints after success, and deterministic CIN names preserve retries. Only data retained on MN can be copied after an outage, so recover before retention limits are exceeded.
 
-ACP 모드에서는 `access_control.py --apply`가 로컬 읽기 신원과 IN의 `/id-quietfix-mn/Cqfforwarder` 권한을 준비한다. 사용자 지정 MN ID는 `QF_MN_CSE_ID`로 맞춘다. MN 전환 시 대상 MN의 SP-relative 백업 신원도 IN ACP에 미리 허용해야 한다. TLS를 쓸 경우 백업 AE의 HTTP 상대는 MN이므로 해당 신원 인증서를 MN 게이트웨이에 연결한다.
+In ACP mode, `access_control.py --apply` prepares the local read identity and IN permissions for `/id-quietfix-mn/Cqfforwarder`. Set `QF_MN_CSE_ID` for custom MN IDs. Before transferring MN, permit the target MN's SP-relative backup identity in IN ACP too. With TLS, the backup AE's HTTP peer is MN; bind its identity certificate to the MN gateway.

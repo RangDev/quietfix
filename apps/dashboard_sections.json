@@ -2,7 +2,7 @@
   "sections": [
     {
       "id": "a",
-      "name": "A 구역",
+      "name": "Zone A",
       "machines": [
         {
           "collector_id": "collector-01",
@@ -24,7 +24,7 @@
     },
     {
       "id": "b",
-      "name": "B 구역",
+      "name": "Zone B",
       "machines": [
         {
           "collector_id": "collector-01",

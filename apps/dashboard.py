@@ -29,7 +29,7 @@ def section_settings():
             if not all(isinstance(value,str) and value for value in key) or key in mapping:
                 raise ValueError('A machine must belong to only one dashboard section')
             mapping[key]={'section_id':sid,'section_name':name}
-    return [{'id':item['id'],'name':item['name']} for item in sections]+[{'id':'unassigned','name':'\ubbf8\ubc30\uc815'}],mapping
+    return [{'id':item['id'],'name':item['name']} for item in sections]+[{'id':'unassigned','name':'Unassigned'}],mapping
 
 def timestamp(value):
     try:
@@ -72,7 +72,7 @@ def snapshot():
     machines = []
     for machine in registered:
         info = {k: machine[k] for k in ('collector_id', 'machine_id', 'machine_name', 'sensors')}
-        info.update(assignments.get((info['collector_id'],info['machine_id']),{'section_id':'unassigned','section_name':'\ubbf8\ubc30\uc815'}))
+        info.update(assignments.get((info['collector_id'],info['machine_id']),{'section_id':'unassigned','section_name':'Unassigned'}))
         sample = grouped.get((machine['collector_id'], machine['machine_id']))
         if sample is None:
             sample = latest_or_none(client, machine['path']+'/telemetry')
@@ -127,7 +127,7 @@ class DashboardCache:
     def read(self):
         with self.lock:
             if self.data is None:
-                return 503, {'error': self.error or '\uccab \ub370\uc774\ud130 \uc870\ud68c \uc911'}
+                return 503, {'error': self.error or 'Retrieving initial data'}
             return 200, {**self.data, 'alerts': list(self.alerts), 'error': self.error}
 
     def run(self, stop):
