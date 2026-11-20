@@ -3,9 +3,9 @@
 ## 지원 범위
 
 Linux, Python 3.12, 단일 호스트 loopback HTTP 구성입니다. Ubuntu 24.04를
-설치 대상 환경으로 삼습니다. 실제 이번 검증 환경과 결과는 [VALIDATION.md](VALIDATION.md)에 기록합니다.
+설치 대상 환경으로 삼습니다. 검증 환경과 결과는 [VALIDATION.md](VALIDATION.md)에 기록합니다.
 ACME 2025.11과 앱 직접 의존성은 requirements 파일에 고정했습니다.
-이번 Linux/Python 3.12 검증에 사용한 전체 의존성은 standalone/requirements-lock.txt에 기록했습니다.
+Linux/Python 3.12 검증에 사용한 전체 의존성은 standalone/requirements-lock.txt에 기록했습니다.
 가상환경을 이동하면 다시 만들고 CSE 설정의 resourcesPath를 확인하세요.
 Windows에서는 Ubuntu VM 또는 WSL 안에서 실행합니다.
 
@@ -48,7 +48,7 @@ CSE 설정을 덮어쓰지 않습니다. 기존 데이터를 삭제하거나 자
 
 기본 시간 기반 데이터로 8대를 표시합니다. 학습한 machine-01·02만 모델 준비 상태이며,
 나머지 6대는 모델 없음 상태에서 임계값 감시를 수행합니다. 기본 8대 데이터의 분포는
-위 학습 데이터와 동일하게 설계되지 않았으므로 이것으로 ML 정확도를 평가하지 마세요.
+학습 데이터와 다르므로 ML 정확도 평가용으로 사용할 수 없습니다.
 
 ### 학습과 일치하는 2대 ML 시연
 
@@ -119,9 +119,3 @@ smoke test는 임시 DB에서 실제 IN/MN·Mcc·8대 저장/분석/중앙 사�
 재실행 시 같은 위치와 가상환경을 사용하세요. 파일을 복사한 다른 호스트에서는
 환경 주소·resourcesPath를 점검하고 services.json은 실행 상태 파일이므로 재사용하지 마세요.
 VM 외부에서 보려면 SSH 포트 포워딩을 사용합니다. 기본 CAdmin/HTTP 구성은 외부 공개용이 아닙니다.
-
-## 제출
-
-검증 후 확정 커밋의 태그와 Release를 제출합니다. 기사·영상은 게시 후 실제 URL로 연결합니다.
-기본 브랜치 변경과 저장소 공개 여부는 저장소 소유자가 결정하며, 제출 링크는
-최종 브랜치 또는 Release를 직접 가리키게 합니다. MEC 관련 평가 근거로 이 구성을 제시하지 않습니다.

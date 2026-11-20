@@ -97,7 +97,7 @@ JSON 파일은 수집기 시작 시 읽습니다. 파일에 머신/센서를 추
 | `vibration_rms` / `mm/s` | 7 이상이면 abnormal |
 | 그 외 종류 또는 다른 단위 | unassessed(미판정). 저장·전달·표시는 수행 |
 
-같은 머신의 동종 센서도 각각 판정합니다. 하나라도 이상이면 머신은 ABNORMAL, 판정 가능한 센서가 모두 정상이면 NORMAL입니다. 미판정 센서가 함께 있으면 문구로 표시하고, 판정 가능한 센서가 하나도 없으면 머신도 ‘미판정’입니다. 전류·압력 등에 임의 기준을 추가하지 않았습니다. AI 모델은 없습니다.
+같은 머신의 동종 센서도 각각 판정합니다. 하나라도 이상이면 머신은 ABNORMAL, 판정 가능한 센서가 모두 정상이면 NORMAL입니다. 미판정 센서가 함께 있으면 문구로 표시하고, 판정 가능한 센서가 하나도 없으면 머신도 ‘미판정’입니다. 전류·압력 등에 임의 기준을 추가하지 않았습니다. 머신별 Isolation Forest 판정은 [ML 안내](ML.md)를 따릅니다.
 
 기존 카드 UI, 현재 시각, 이상 시 붉은 테두리, 알림 최대 10개를 유지합니다. 알림에는 수집기와 이상 센서 이름도 표시합니다. 같은 분석 샘플은 중복 등록하지 않으며 알림은 서버 메모리만 사용합니다. 재시작 시 IN에 보존된 결과에서 최근 알림을 구성합니다. 대시보드는 3초마다, 분석·전달은 기본 2초마다 조회하므로 즉시 동시에 바뀌지는 않습니다.
 
@@ -188,11 +188,11 @@ source session.env
 
 ## 선택적 FlexContainer 모델
 
-`QF_FLEX_ENABLED=1`로 센서 타입·단위·값을 명시한 모델을 생성하고 FCNT 질의 기반 발견을 사용합니다. 양쪽 CSE의 모델 설치와 ACP 재적용이 필요합니다. [FLEX.md](FLEX.md)에 계획·구현·검증·전환 절차를 정리했습니다.
+`QF_FLEX_ENABLED=1`로 센서 타입·단위·값을 명시한 모델을 생성하고 FCNT 질의 기반 발견을 사용합니다. 양쪽 CSE의 모델 설치와 ACP 재적용이 필요합니다. [FLEX.md](FLEX.md)에 모델 설정·검증·전환 절차가 있습니다.
 
 ## 선택적 수집기 MQTT 바인딩
 
-`QF_COLLECTOR_PROTOCOL=mqtt`로 수집기–MN-CSE 구간만 oneM2M MQTT 바인딩을 사용합니다. 사전 AE 등록과 ACP 모드, MQTT 브로커 및 ACME MQTT 설정이 필요합니다. [MQTT.md](MQTT.md)에 계획·구현·검증·실행 방법을 정리했습니다. 기본 HTTP 동작과 다른 앱의 HTTP 통신은 유지됩니다.
+`QF_COLLECTOR_PROTOCOL=mqtt`로 수집기–MN-CSE 구간만 oneM2M MQTT 바인딩을 사용합니다. 사전 AE 등록과 ACP 모드, MQTT 브로커 및 ACME MQTT 설정이 필요합니다. [MQTT.md](MQTT.md)에 통신 구조·검증·실행 방법이 있습니다. 기본 HTTP 동작과 다른 앱의 HTTP 통신은 유지됩니다.
 
 ## Authenticated transport, semantic discovery and controlled transfer
 
@@ -200,14 +200,13 @@ source session.env
 - [SAREF descriptors and explicit unit mapping](SEMANTICS.md)
 - [Controlled MN-CSE transfer and retained-state restoration](HANDOVER.md)
 
-These are independently configured features. They are not automatically installed into the user VM.
+These features require separate configuration.
 
 ## 구역별 대시보드
 
-머신 카드는 정상·이상 등 상태만 표시하고 선택한 머신의 센서값·속성은 상세 패널에서 확인합니다. 구역 배정은 dashboard_sections.json 또는 QF_DASHBOARD_SECTIONS 설정으로 관리하며 기존 센서 JSON은 유지됩니다. [대시보드 안내](DASHBOARD.md)를 참고하세요. 노드·MEC 상태 화면은 추가하지 않았습니다.
+머신 카드는 정상·이상 등 상태만 표시하고 선택한 머신의 센서값·속성은 상세 패널에서 확인합니다. 구역 배정은 dashboard_sections.json 또는 QF_DASHBOARD_SECTIONS 설정으로 관리하며 기존 센서 JSON은 유지됩니다. [대시보드 안내](DASHBOARD.md)를 참고하세요.
 
 
 ## oneM2M 전용 브랜치의 백업 경로
 
 `backup_ae.py`는 MN 장비에서 실행하며 측정 원본과 분석 결과를 MN에서 읽는다. IN 사본 저장 요청도 MN URL의 `~/IN-CSE-ID/IN-CSEBase/...`로 보낸다. MN이 Mcc로 전달하므로 백업 AE와 IN 사이에 직접 Mca 연결은 없다. 분석 AE와 백업 AE는 별도 프로그램이다. 초기 권한 설정과 사용자 지정 CSE-ID는 [standalone 가이드](../standalone/README.md)를 따른다. 이전 `forwarder_ae.py` 명령도 같은 백업 실행으로 연결되며 기존 신원·구독·SQLite 상태를 재사용한다.
-

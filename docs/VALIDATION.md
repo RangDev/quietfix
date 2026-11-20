@@ -1,13 +1,13 @@
 # 검증 기록
 
-검증일: 2026-11-20. 최종 문서·실행 관리·주석 제거 변경에 대해 수행했습니다.
+검증일: 2026-11-20. 대상: 서비스 실행 관리와 Python 소스 정리.
 
 ## 환경
 
 - Debian GNU/Linux 13.7 (Linux), Python 3.12.14
 - ACME 2025.11, scikit-learn 1.8.0, joblib 1.5.3
 - 전체 Python 패키지 버전: [requirements-lock.txt](../standalone/requirements-lock.txt)
-- Ubuntu 24.04는 배포 대상이며 이번 세션에서 직접 검증한 OS는 Debian입니다.
+- Ubuntu 24.04는 배포 대상이며 검증 OS는 Debian입니다.
 - 기본 HTTP/CAdmin loopback 구성. TLS·UI·선택적 실환경 테스트는 아래 회귀 결과의 skip과 구분합니다.
 
 ## 결과
@@ -59,7 +59,7 @@ smoke test는 기존 8081/9090 CSE를 종료한 상태에서 실행합니다.
 
 0.1초/행의 빠른 반복 재생 시험에서는 최신 원본에 분석·중앙 사본이 따라오지 못해
 API의 waiting_for_analysis가 지속되는 현상이 관찰됐습니다. 정상 처리량을 보장하는
-시험이 아니며, 발표에서는 가이드의 기본 주기를 사용하고 실제 sample_id 연결을 확인합니다.
+시험은 아닙니다. 가이드의 기본 주기에서 실제 sample_id 연결을 확인해야 합니다.
 프로세스 RUNNING과 HTTP 응답만으로 데이터 처리 완료를 판단하지 않습니다.
 재부팅 자동 시작·장시간 부하·분산 장비·실제 물리 센서 시험은 수행하지 않았습니다.
 
