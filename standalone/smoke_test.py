@@ -25,11 +25,20 @@ try:
     if procs[-1].poll() is not None:raise RuntimeError(Path(log.name).read_text())
     time.sleep(.25)
   else:raise RuntimeError('startup timeout '+role)
- for i in range(4):
-  r=subprocess.run([sys.executable,'standalone/manage.py','check'],capture_output=True,text=True,timeout=8)
-  if r.returncode==0:print(r.stdout);break
-  time.sleep(.5)
- else:raise RuntimeError(r.stderr)
+ deadline=time.monotonic()+45
+ last_error='Mcc registration has not completed'
+ while time.monotonic()<deadline:
+  if any(p.poll() is not None for p in procs):
+   raise RuntimeError('CSE exited while waiting for Mcc registration')
+  try:
+   r=subprocess.run([sys.executable,'standalone/manage.py','check'],capture_output=True,text=True,
+                    timeout=min(8,deadline-time.monotonic()))
+   if r.returncode==0:print(r.stdout);break
+   last_error=r.stderr
+  except subprocess.TimeoutExpired:
+   last_error='Mcc readiness check timed out'
+  time.sleep(min(.5,max(0,deadline-time.monotonic())))
+ else:raise RuntimeError('Mcc registration did not become ready within 45 seconds:\n'+last_error)
  import config as c
  c.MN_BASE='quietfix-mn';c.IN_BASE='quietfix-in'
  from sensor_simulator import SensorSimulator
@@ -71,6 +80,11 @@ try:
  from dashboard import snapshot
  assert len(snapshot()['machines'])==8
  print('PASS real ACME publish -> analysis -> archive -> dashboard (8-machine default timeline)')
+except Exception:
+ for role in ('in','mn'):
+  log_path=home/(role+'-smoke.log')
+  if log_path.exists():print(f'--- {role.upper()} CSE log ---\n'+log_path.read_text(),file=sys.stderr)
+ raise
 finally:
  for p in reversed(procs):
   os.killpg(p.pid,signal.SIGTERM)
