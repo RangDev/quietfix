@@ -14,7 +14,7 @@ import config as c
 from onem2m_client import Client, OneM2MError
 from resource_registry import publish, discover_machines
 from analyzer_ae import step as analyze_step
-from forwarder_ae import step as forward_step
+from backup_ae import step as forward_step
 from flex_model import KIND, CND, with_typed_readings
 from worker_state import State
 import dashboard

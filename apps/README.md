@@ -115,7 +115,7 @@ Use distinct `QF_COLLECTOR_ID` values for multiple collectors. Never run multipl
 python3 -m unittest discover -s tests -v
 ```
 
-A local HTTP oneM2M test server verifies registration → analysis → IN forwarding → dashboard API construction. This does not replace actual ACME/physical-sensor integration tests. Validation scope is recorded in `VALIDATION.txt`. This is a small polling prototype: the 10,000-resource discovery limit and CSE retention can cause unprocessed data loss. Long-term/high-volume operation, deregistration, individual sensor events, and hot reload are outside scope.
+A local HTTP oneM2M test server verifies registration → analysis → IN forwarding → dashboard API construction. This does not replace actual ACME/physical-sensor integration tests. Validation scope is recorded in [the validation record](../docs/VALIDATION.md). This is a small polling prototype: the 10,000-resource discovery limit and CSE retention can cause unprocessed data loss. Long-term/high-volume operation, deregistration, individual sensor events, and hot reload are outside scope.
 
 ## File Responsibilities
 
@@ -209,5 +209,5 @@ Machine cards show statuses such as normal/anomaly; sensor values and attributes
 
 ## Backup Path in the oneM2M-Only Implementation
 
-`backup_ae.py` runs on the MN device and reads source measurements and analysis results from MN. It sends IN-copy requests to `~/IN-CSE-ID/IN-CSEBase/...` at the MN URL. MN forwards over Mcc, so there is no direct Mca link between backup AE and IN. Analysis and backup AEs are separate programs. See the [standalone guide](../standalone/README.md) for initial permissions and custom CSE-IDs. The previous `forwarder_ae.py` command invokes the same backup implementation and reuses existing identities, subscriptions, and SQLite state.
+`backup_ae.py` runs on the MN device and reads source measurements and analysis results from MN. It sends IN-copy requests to `~/IN-CSE-ID/IN-CSEBase/...` at the MN URL. MN forwards over Mcc, so there is no direct Mca link between backup AE and IN. Analysis and backup AEs are separate programs. See the [standalone guide](../standalone/README.md) for initial permissions and custom CSE-IDs. Existing identities, subscriptions, and SQLite state are retained.
 

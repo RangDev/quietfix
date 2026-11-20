@@ -1,7 +1,7 @@
 # QuietFix
 
 oneM2M-based industrial equipment monitoring and per-machine anomaly detection prototype.
-The current implementation is maintained on **`main`**; this **`english`** branch provides the English version. It collects temperature, vibration, and current,
+The current implementation is maintained on **`main`**. It collects temperature, vibration, and current,
 and combines a separate Isolation Forest model for each machine with safety thresholds.
 
 ## Architecture and Data Flow

@@ -64,7 +64,7 @@ Process RUNNING and HTTP responses alone do not establish completed data process
 Startup after reboot, long-duration load, distributed equipment, and physical sensors were not tested.
 
 In the source-cleanup revision described above, Korean strings used Unicode escapes to preserve existing UI text
-and string values. This English branch translates those runtime strings. Code explanations are provided in Markdown.
+and string values. The English translation merged into main translates those runtime strings. Code explanations are provided in Markdown.
 
 ## English Branch Validation (2026-11-20)
 
@@ -78,3 +78,17 @@ and string values. This English branch translates those runtime strings. Code ex
 - The optional Playwright UI test was attempted with system Chromium. Chromium could not start because socket creation was denied by the execution environment; browser/mobile rendering was not verified.
 - Live ACME integration was not rerun for this translation. Earlier results above describe their original validation revisions.
 - Existing runtime databases are not migrated; previously stored user-defined names retain their saved values.
+
+## Post-Merge Cleanup (2026-11-20)
+
+- Reviewed merged main commit `e41f879`.
+- Scanned all 79 tracked files for literal and Unicode-escaped Hangul; none remained.
+- Updated installation instructions, branch descriptions, and CI triggers for main.
+- Removed the old forwarder entry point; regression and optional live tests now use backup_ae.py.
+- Removed apps/VALIDATION.txt, an earlier feature-validation log superseded by this record.
+- Retained optional feature modules, security examples, and datasets referenced by documentation or tests.
+- Python compilation, JSON parsing, local Markdown links, and whitespace checks passed.
+- Unittest discovery: 75 tests, 72 passed, 3 optional tests skipped (live ACME, broker TLS, browser UI).
+- Standalone ACME smoke test passed: IN/MN types, Mcc routing, eight-machine source/analysis/archive/dashboard,
+  MN-only backup HTTP, matching central copies, restart deduplication, group membership, and role ACP.
+- User VM deployment and optional browser UI/MQTT TLS integrations were not performed for this cleanup.

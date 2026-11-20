@@ -1,6 +1,6 @@
 # Release Information
 
-This is a oneM2M-based equipment-monitoring prototype. The current implementation is on `main`; this English version is on `english`.
+This is a oneM2M-based equipment-monitoring prototype. The current implementation is maintained on `main`.
 It includes standalone ACME MN/IN-CSEs, collection, analysis, backup management AEs, and a central dashboard.
 Central-copy requests pass from MN-CSE to IN-CSE over Mcc.
 Per-machine Isolation Forest models operate alongside threshold monitoring.

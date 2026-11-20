@@ -2,9 +2,9 @@ name: Verify oneM2M prototype
 
 on:
   push:
-    branches: [main, english]
+    branches: [main]
   pull_request:
-    branches: [main, english]
+    branches: [main]
   workflow_dispatch:
 
 permissions:

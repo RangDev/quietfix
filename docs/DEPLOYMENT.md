@@ -12,7 +12,7 @@ On Windows, run inside an Ubuntu VM or WSL.
 ## Initial Installation
 
 ```bash
-git clone --branch english --single-branch https://github.com/RangDev/quietfix.git
+git clone --branch main --single-branch https://github.com/RangDev/quietfix.git
 cd quietfix
 python3 -m venv .venv
 .venv/bin/python -m pip install -r standalone/requirements-lock.txt

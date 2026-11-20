@@ -135,7 +135,7 @@ class DynamicFlow(unittest.TestCase):
 
     def pipeline(self):
         self.run_app('analyzer_ae.py','--once')
-        self.run_app('forwarder_ae.py','--once')
+        self.run_app('backup_ae.py','--once')
 
     def test_dynamic_registration_restart_extension_and_gateway_namespace(self):
 
@@ -206,7 +206,7 @@ class DynamicFlow(unittest.TestCase):
     def test_running_workers_discover_new_devices_without_restart(self):
         workers = [subprocess.Popen([sys.executable,str(APPS/name)], env={**self.env,'QF_POLL_SECONDS':'0.05'},
                                    stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,text=True)
-                   for name in ('analyzer_ae.py','forwarder_ae.py')]
+                   for name in ('analyzer_ae.py','backup_ae.py')]
         def wait_for(predicate):
             deadline=time.monotonic()+10
             while time.monotonic()<deadline:
