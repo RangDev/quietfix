@@ -147,7 +147,7 @@ export QF_RECONCILE_SECONDS=30
 
 URL을 지정하지 않으면 경고 로그를 남기고 기존 `QF_POLL_SECONDS` 간격의 폴링을 사용합니다. URL을 지정했지만 구독 생성이 실패하면 로그를 남기고 30초 보완 조회는 계속합니다. `--once`는 수신 서버나 구독 없이 한 차례 처리합니다. 알림 모드에서는 같은 역할을 한 프로세스로 실행하세요. 알림 수신 포트는 개발 환경의 신뢰할 수 있는 네트워크에만 노출하세요.
 
-분석기는 각 머신 telemetry를, 백업 관리 AE는 각 머신 telemetry와 MN analyzer/results를 구독합니다. 백업 관리 AE는 IN의 `archive/telemetryGroup`(ty=9)을 자동 생성·갱신하며, 모든 머신의 telemetry 컨테이너를 멤버로 유지합니다. 대시보드는 `GET <IN_BASE>/archive/telemetryGroup/fopt/la`로 최신 CIN들을 일괄 조회합니다. 그룹이 아직 없거나 일부 멤버가 비어 있으면 해당 머신만 개별 조회합니다. 분석 결과는 같은 sample_id로 연결하며 그룹 조회가 분석기·백업 관리 AE의 전체 샘플 처리를 대체하지 않습니다. 대시보드는 3초 갱신을 유지합니다.
+분석기는 각 머신 telemetry를, 백업 관리 AE는 각 머신 telemetry와 MN analyzer/results를 구독합니다. 백업 관리 AE는 IN의 `archive/telemetryGroup`(ty=9)을 자동 생성·갱신하며, 모든 머신의 telemetry 컨테이너를 멤버로 유지합니다. 대시보드는 `GET <IN_BASE>/archive/telemetryGroup/fopt/la`로 최신 CIN들을 일괄 조회합니다. 그룹이 아직 없거나 일부 멤버가 비어 있으면 해당 머신만 개별 조회합니다. 센서별 판정은 같은 sample_id에만 연결하며 머신 상태는 마지막 분석 결과를 유지합니다. 그룹 조회가 분석기·백업 관리 AE의 전체 샘플 처리를 대체하지 않습니다. 대시보드는 3초 갱신을 유지합니다.
 
 그룹은 백업 관리 AE가 관리하므로 대시보드는 IN을 읽기만 합니다. CSE 내부에서는 멤버별로 요청을 수행하며 같은 측정 시각이나 원자적 스냅샷을 보장하지 않습니다. 그룹 생성·갱신이 실패하면 백업 관리 AE는 오류를 기록하고 데이터 전달을 계속합니다. 이 기능은 별도 DB·MQTT 브로커 없이 HTTP로 동작합니다.
 
@@ -210,3 +210,4 @@ These features require separate configuration.
 ## oneM2M 전용 브랜치의 백업 경로
 
 `backup_ae.py`는 MN 장비에서 실행하며 측정 원본과 분석 결과를 MN에서 읽는다. IN 사본 저장 요청도 MN URL의 `~/IN-CSE-ID/IN-CSEBase/...`로 보낸다. MN이 Mcc로 전달하므로 백업 AE와 IN 사이에 직접 Mca 연결은 없다. 분석 AE와 백업 AE는 별도 프로그램이다. 초기 권한 설정과 사용자 지정 CSE-ID는 [standalone 가이드](../standalone/README.md)를 따른다. 이전 `forwarder_ae.py` 명령도 같은 백업 실행으로 연결되며 기존 신원·구독·SQLite 상태를 재사용한다.
+

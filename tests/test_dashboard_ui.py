@@ -38,7 +38,7 @@ class DashboardUI(unittest.TestCase):
                 self.assertNotIn('°C',page.locator('#sections').inner_text())
                 self.assertEqual(page.locator('.machine.normal').count(),3)
                 self.assertEqual(page.locator('.machine.abnormal').count(),1)
-                page.get_by_role('button',name='\uba38\uc2e0 2 · \uc774\uc0c1 \uac10\uc9c0 · \uc0c1\uc138 \ubcf4\uae30',exact=True).click()
+                page.get_by_role('button',name='\uba38\uc2e0 2 \xb7 \uc774\uc0c1 \uac10\uc9c0 \xb7 \uc0c1\uc138 \ubcf4\uae30',exact=True).click()
                 expect(page.locator('#detail-title')).to_have_text('\uba38\uc2e0 2 \uc0c1\uc138')
                 expect(page.locator('#detail-body')).to_contain_text('78')
 
@@ -46,11 +46,28 @@ class DashboardUI(unittest.TestCase):
                 expect(page.locator('#detail-body .metric strong')).to_contain_text('79',timeout=6000)
                 expect(page.locator('.machine[aria-pressed=true]')).to_have_count(1)
                 expect(page.locator('#close')).to_be_focused()
+                machines[1]['analysis_pending']=True
+                machines[1]['analysis']['sample_id']='previous'
+                machines[1]['analysis']['timestamp']='2026-11-18T21:59:59+09:00'
+                expect(page.locator('.machine.abnormal')).to_have_count(1,timeout=6000)
+                expect(page.locator('#detail-body')).to_contain_text('\ucd5c\uc2e0\uac12 \ubd84\uc11d \uc911',timeout=6000)
+                expect(page.locator('#detail-body .metric')).not_to_have_class('metric abnormal')
+                expect(page.locator('#detail-body')).to_contain_text('\ubd84\uc11d \ub300\uc0c1 \uce21\uc815 \uc2dc\uac01')
+                machines[1]['analysis_delayed']=True
+                expect(page.locator('#detail-body')).to_contain_text('\ubd84\uc11d \uc9c0\uc5f0',timeout=6000)
+                expect(page.locator('.machine.abnormal')).to_have_count(1)
+                machines[1]['analysis_delayed']=False
+                machines[1]['analysis_pending']=False
+                machines[1]['analysis']['sample_id']='s2'
+                machines[1]['analysis']['status']='normal'
+                expect(page.locator('.machine.normal')).to_have_count(4,timeout=6000)
+                machines[1]['analysis']['status']='abnormal'
+                expect(page.locator('.machine.abnormal')).to_have_count(1,timeout=6000)
                 screenshot=os.getenv('QF_UI_SCREENSHOT')
                 if screenshot:page.screenshot(path=screenshot,full_page=True)
                 page.keyboard.press('Escape')
                 expect(page.locator('#close')).to_be_hidden()
-                expect(page.get_by_role('button',name='\uba38\uc2e0 2 · \uc774\uc0c1 \uac10\uc9c0 · \uc0c1\uc138 \ubcf4\uae30',exact=True)).to_be_focused()
+                expect(page.get_by_role('button',name='\uba38\uc2e0 2 \xb7 \uc774\uc0c1 \uac10\uc9c0 \xb7 \uc0c1\uc138 \ubcf4\uae30',exact=True)).to_be_focused()
                 page.keyboard.press('Enter');expect(page.locator('#close')).to_be_visible()
                 mode['fail']=True
                 expect(page.locator('.machine.normal')).to_have_count(0,timeout=6000)
@@ -59,11 +76,12 @@ class DashboardUI(unittest.TestCase):
                 mode['fail']=False
                 page.set_viewport_size({'width':390,'height':844})
                 page.reload();expect(page.locator('.machine')).to_have_count(5)
-                page.get_by_role('button',name='\uba38\uc2e0 1 · \uc815\uc0c1 · \uc0c1\uc138 \ubcf4\uae30',exact=True).click()
+                page.get_by_role('button',name='\uba38\uc2e0 1 \xb7 \uc815\uc0c1 \xb7 \uc0c1\uc138 \ubcf4\uae30',exact=True).click()
                 expect(page.locator('#detail-title')).to_have_text('\uba38\uc2e0 1 \uc0c1\uc138')
                 self.assertTrue(page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'))
                 if screenshot:page.screenshot(path=screenshot.replace('.png','-mobile.png'),full_page=True)
                 self.assertEqual(errors,[])
                 browser.close()
         finally:server.shutdown();server.server_close();thread.join()
+
 

@@ -69,3 +69,8 @@ ML_CONSECUTIVE = int(os.getenv('QF_ML_CONSECUTIVE', '3'))
 if ML_CONSECUTIVE < 1:
     raise ValueError('QF_ML_CONSECUTIVE must be positive')
 
+
+
+ANALYSIS_STALE_SECONDS = float(os.getenv('QF_ANALYSIS_STALE_SECONDS', '60'))
+if not 0 < ANALYSIS_STALE_SECONDS < float('inf'):
+    raise ValueError('QF_ANALYSIS_STALE_SECONDS must be finite and positive')

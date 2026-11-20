@@ -2,6 +2,7 @@
 import argparse
 import json
 import threading
+from time import monotonic
 from collections import deque
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -30,6 +31,27 @@ def section_settings():
             mapping[key]={'section_id':sid,'section_name':name}
     return [{'id':item['id'],'name':item['name']} for item in sections]+[{'id':'unassigned','name':'\ubbf8\ubc30\uc815'}],mapping
 
+def timestamp(value):
+    try:
+        parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        return parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed
+    except (AttributeError, TypeError, ValueError):
+        return None
+
+def analysis_view(sample, results, now):
+    sample_time = timestamp(sample.get('timestamp'))
+    eligible = [r for r in results if r.get('sample_id') == sample['sample_id'] or
+                (sample_time is not None and timestamp(r.get('timestamp')) is not None
+                 and timestamp(r['timestamp']) <= sample_time)]
+    latest = max(eligible, key=lambda r: (timestamp(r.get('timestamp')) or
+                 datetime.min.replace(tzinfo=timezone.utc), r.get('sequence', 0)), default=None)
+    pending = latest is None or latest['sample_id'] != sample['sample_id']
+    reference = timestamp(latest.get('timestamp')) if latest else sample_time
+    age = max(0, (now - reference).total_seconds()) if reference else None
+    return {'analysis': latest, 'state': 'ready' if latest else 'waiting_for_analysis',
+            'analysis_pending': pending, 'analysis_age_seconds': age,
+            'analysis_delayed': age is None or age >= c.ANALYSIS_STALE_SECONDS}
+
 def snapshot():
     sections,assignments=section_settings()
     client = Client(c.IN_URL, c.role_origin('dashboard'))
@@ -42,7 +64,10 @@ def snapshot():
         if e.status != 404:
             raise
         registered = []
-    by_sample = {(r.get('collector_id'), r['machine_id'], r['sample_id']): r for r in results}
+    by_machine = {}
+    for result in results:
+        by_machine.setdefault((result.get('collector_id'), result['machine_id']), []).append(result)
+    now = datetime.now(timezone.utc)
     grouped = latest_group(client) if registered else {}
     machines = []
     for machine in registered:
@@ -57,9 +82,8 @@ def snapshot():
         if c.FLEX_ENABLED:
             from flex_model import with_typed_readings
             sample = with_typed_readings(sample, machine)
-        matching = by_sample.get((machine['collector_id'], machine['machine_id'], sample['sample_id']))
-        machines.append({**info, 'telemetry': sample, 'analysis': matching,
-                         'state': 'ready' if matching else 'waiting_for_analysis'})
+        view = analysis_view(sample, by_machine.get((machine['collector_id'], machine['machine_id']), []), now)
+        machines.append({**info, 'telemetry': sample, **view})
     return {'source': 'IN-CSE', 'machines': machines, 'sections':sections, '_results': results}
 class DashboardCache:
 
@@ -69,6 +93,7 @@ class DashboardCache:
         self.seen = set()
         self.data = None
         self.error = None
+        self.waiting_since = {}
 
     def refresh(self):
         try:
@@ -77,6 +102,16 @@ class DashboardCache:
             results = value.pop('_results')
             keys = {(r.get('collector_id'), r['machine_id'], r['sample_id']) for r in results}
             with self.lock:
+                waiting = {}
+                observed_at = monotonic()
+                for machine in value['machines']:
+                    if machine.get('telemetry') and not machine.get('analysis'):
+                        key = (machine['collector_id'], machine['machine_id'])
+                        waiting[key] = self.waiting_since.get(key, observed_at)
+                        machine['analysis_wait_seconds'] = observed_at - waiting[key]
+                        machine['analysis_delayed'] = machine.get('analysis_delayed', False) or (
+                            machine['analysis_wait_seconds'] >= c.ANALYSIS_STALE_SECONDS)
+                self.waiting_since = waiting
                 for r in sorted(results, key=lambda r: r.get('timestamp', '')):
                     key = (r.get('collector_id'), r['machine_id'], r['sample_id'])
                     if r.get('status') == 'abnormal' and key not in self.seen:
@@ -137,4 +172,5 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         pass
+
 
