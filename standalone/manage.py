@@ -1,4 +1,4 @@
-"""Standalone loopback ACME deployment; no MEC, containers or Kubernetes."""
+
 import argparse
 import json
 import os
@@ -101,4 +101,5 @@ def main():
         raise SystemExit(subprocess.call([sys.executable,'-m','acmecse','--base-directory',str(home),
                            '--headless','--no-mqtt','--no-coap','--no-ws']))
 if __name__=='__main__':main()
+
 

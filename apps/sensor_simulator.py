@@ -1,4 +1,4 @@
-"""JSON dataset adapter; no server, network request, or background thread."""
+
 import hashlib
 import json
 from pathlib import Path
@@ -23,7 +23,7 @@ class SensorSimulator:
     def __len__(self):
         return len(self.records)
     def read_measurements(self, index):
-        """index is the absolute sequence number, not just the JSON row number."""
+
         if index < 0:
             raise ValueError('index must be nonnegative')
         cycle, row_index = divmod(index, len(self.records))
@@ -32,7 +32,7 @@ class SensorSimulator:
             f'v3:{self.collector_id}:{self.fingerprint}:{self.replay_id}:{index}'.encode()).hexdigest()
         row['collector_id'] = self.collector_id
         row['source_sample_id'] = self.records[row_index].get('sample_id')
-        # Ignore any preset timestamp. Collector calls this immediately before sending.
+
         row['timestamp'] = datetime.now(timezone.utc).isoformat()
         row['dataset_index'] = row_index
         row['cycle'] = cycle + 1
@@ -40,3 +40,4 @@ class SensorSimulator:
         row['replay_id'] = self.replay_id
         row['simulated'] = True
         return row
+

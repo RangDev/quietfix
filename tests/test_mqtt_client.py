@@ -1,4 +1,4 @@
-"""Binding/correlation tests complement real broker + ACME integration."""
+
 import json
 from pathlib import Path
 import sys
@@ -82,3 +82,4 @@ class MQTTBindingTests(unittest.TestCase):
         with patch.object(c,'ACP_ENABLED',True),patch.object(c,'COLLECTOR_PROTOCOL','mqtt'),patch.dict(module._collector_clients,{},clear=True),patch('mqtt_client.MQTTClient') as factory:
             self.assertIs(collector_client(),collector_client())
             factory.assert_called_once()
+

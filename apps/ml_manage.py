@@ -1,4 +1,4 @@
-"""Generate synthetic normal baselines, explicitly train, or evaluate held-out rows."""
+
 import argparse
 import json
 from pathlib import Path
@@ -69,3 +69,4 @@ def main():
             for row in rows: groups.setdefault('/'.join(identity(row)),[]).append(row)
             print(json.dumps({key:evaluate(group,Models(a.model_dir)) for key,group in groups.items()},indent=2))
 if __name__=='__main__':main()
+

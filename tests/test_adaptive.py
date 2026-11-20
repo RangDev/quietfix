@@ -44,7 +44,7 @@ class Adaptive(unittest.TestCase):
                 self.assertEqual(store.head()[1]['sample_id'],payloads[0]['sample_id'])
                 self.assertIn('delivery_started_at',store.head()[1])
             finally:stop.set();wake.set();thread.join(3)
-            # Recovered network drains the durable queue.
+
             sent=[];stop.clear()
             thread=threading.Thread(target=deliver,args=(path,stop,wake,lambda s:sent.append(s)));thread.start()
             deadline=time.monotonic()+3
@@ -61,3 +61,4 @@ class Adaptive(unittest.TestCase):
             self.assertGreater(store.load('t')['dropped'],0)
             store.db.close()
 if __name__=='__main__':unittest.main()
+

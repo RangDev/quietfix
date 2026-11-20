@@ -1,4 +1,4 @@
-"""Dynamic oneM2M resource registration and discovery; no separate database."""
+
 import hashlib
 import json
 from urllib.parse import urlencode
@@ -11,7 +11,7 @@ MACHINE_LABEL = 'quietfix-machine-v3'
 def ensure_ae(client, base, name):
     identifier(name)
     if c.ACP_ENABLED:
-        client.call('GET', base+'/'+name)  # Admin provisions AEs before secure runtime.
+        client.call('GET', base+'/'+name)
         return base+'/'+name
     client.ensure(base, 'm2m:ae', {'rn': name, 'api': 'NQuietFix', 'rr': False, 'srv': ['3']}, 2)
     return base+'/'+name
@@ -41,7 +41,7 @@ def latest_or_none(client, path):
 
 def register_machine(client, parent, sample):
     machine = identifier(sample['machine_id'])
-    # Prefix avoids collision with old collector-01/telemetry, or archive/results.
+
     path = ensure_cnt(client, parent, 'machine-'+machine, lbl=[MACHINE_LABEL])
     ensure_cnt(client, path, 'telemetry')
     metadata = ensure_cnt(client, path, 'metadata', mni=1)
@@ -52,7 +52,7 @@ def register_machine(client, parent, sample):
     catalog = {'collector_id': sample['collector_id'], 'machine_id': machine,
                'machine_name': sample.get('machine_name', machine),
                'sensors': sorted(sensors.values(), key=lambda s: s['sensor_id'])}
-    # Unchanged catalog produces no additional metadata write.
+
     catalog['sample_id'] = 'catalog-'+hashlib.sha256(
         json.dumps(catalog, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
     if previous != catalog:
@@ -76,10 +76,11 @@ def discover_machines(client, base):
         from flex_model import discover
         yield from discover(client, base)
         return
-    # Use labels so unrelated containers and legacy resources are left untouched.
+
     query = urlencode({'fu': 1, 'ty': 3, 'lbl': MACHINE_LABEL, 'drt': 1, 'lim': 10000})
     result = client.call('GET', base+'?'+query)
     for path in sorted(result.get('m2m:uril', [])):
         catalog = latest_or_none(client, path+'/metadata')
         if catalog is not None:
             yield {**catalog, 'path': path}
+

@@ -1,4 +1,4 @@
-"""Backup routing contract: source endpoint, remote targets and lost-response replay."""
+
 import sys
 import unittest
 from pathlib import Path
@@ -46,3 +46,4 @@ class BackupRoute(unittest.TestCase):
             state.mark.assert_called_once_with('v3:mn/analyzer/results:s')
 
 if __name__=='__main__':unittest.main()
+

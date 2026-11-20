@@ -1,4 +1,4 @@
-"""Live CSE permission checks using temporary containers; no existing CIN edits."""
+
 import argparse
 import uuid
 import config as c
@@ -21,7 +21,7 @@ def main():
         p.error('Use --run after applying access_control.py --apply')
     c.require_mn()
     c.ACP_ENABLED=True
-    policies()  # Validate distinct non-admin role origins.
+    policies()
     checks=0
     for url,base,parent,policy,writer,readers,forbidden in [
         (c.MN_URL,c.MN_BASE,c.MN_BASE+'/'+c.COLLECTOR_ID,'sensors','collector',('analyzer','forwarder'),('analyzer','forwarder')),
@@ -40,7 +40,7 @@ def main():
                 denied(Client(url,c.role_origin(role)),'POST',path,{'m2m:cin':{'rn':'forbidden-'+role,'con':'must be rejected'}},4);checks+=1
             role=readers[0]
             denied(Client(url,c.role_origin(role)),'DELETE',path,None);checks+=1
-            # A non-admin must not change policy definitions or resource ACPI.
+
             client=Client(url,c.role_origin(writer))
             denied(client,'PUT',policy_ref(base,policy),{'m2m:acp':{'pv':{'acr':[{'acor':['*'],'acop':63}]}}});checks+=1
             denied(client,'PUT',path,{'m2m:cnt':{'acpi':[policy_ref(base,policy)]}});checks+=1
@@ -50,3 +50,4 @@ def main():
     print('Also verify notification delivery, subscription URL updates, group fan-out, and dynamic machine registration with running apps.')
 
 if __name__=='__main__':main()
+

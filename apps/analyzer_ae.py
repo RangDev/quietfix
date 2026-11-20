@@ -1,4 +1,4 @@
-"""Independent analysis AE: consume MN telemetry and persist machine-specific ML and threshold results."""
+
 import argparse
 import config as c
 from onem2m_client import Client
@@ -66,3 +66,4 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         pass
+

@@ -1,3 +1,6 @@
+최신 배포 및 주석 제거 검증 기록: ../docs/VALIDATION.md
+아래는 기존 기능별 검증 기록입니다.
+
 v2 검증: Python 문법 검사 및 모의 oneM2M HTTP 서버 기반 통합 테스트 통과.
 - 10행 데이터셋 2회 순환, 총 20개 측정값 및 대응 분석 결과 전달
 - MN/IN 합계 CIN 80개 확인
@@ -117,3 +120,4 @@ Standalone oneM2M branch (2026-11-20)
 - unittest: 59 run, 56 passed, 3 optional skipped. Includes failed-write checkpoint and remote-target/current-MN routing contracts.
 - compileall and diff whitespace checks passed.
 - Existing user VM was not modified; TLS/MQTT/UI optional integration was not rerun for this change.
+

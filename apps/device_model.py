@@ -1,11 +1,11 @@
-"""Shared machine/sensor schema. Sensors are readings, not oneM2M AEs."""
+
 import math
 import re
 
 LEGACY = {
-    'temperature_c': ('temperature', '온도', '°C'),
-    'vibration_rms_mm_s': ('vibration_rms', '진동 RMS', 'mm/s'),
-    'current_a': ('current', '전류', 'A'),
+    'temperature_c': ('temperature', '\uc628\ub3c4', '°C'),
+    'vibration_rms_mm_s': ('vibration_rms', '\uc9c4\ub3d9 RMS', 'mm/s'),
+    'current_a': ('current', '\uc804\ub958', 'A'),
 }
 RULES = {'temperature': ('°C', 75), 'vibration_rms': ('mm/s', 7)}
 
@@ -15,7 +15,7 @@ def identifier(value):
     return value
 
 def normalize(row):
-    """One row is a complete current sensor snapshot for one machine."""
+
     row = dict(row)
     identifier(row.get('machine_id'))
     sensors = row.get('sensors')
@@ -62,3 +62,4 @@ def sensor_status(sensor):
 def machine_status(sensors):
     statuses = {sensor_status(s) for s in sensors}
     return 'abnormal' if 'abnormal' in statuses else 'normal' if 'normal' in statuses else 'unassessed'
+

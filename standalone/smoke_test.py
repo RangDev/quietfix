@@ -1,4 +1,4 @@
-"""Actual standalone ACME smoke test. Stop existing listeners on 8081/9090 first."""
+
 import subprocess,sys,time,os,tempfile,json,signal,socket
 from unittest.mock import patch
 import requests
@@ -55,7 +55,7 @@ try:
   return request(method,url,**kwargs)
  with patch('requests.request',side_effect=mn_only):
   forward(mn,routed,State('forwarder'))
-  forward(mn,routed,State('forwarder'))  # retry/restart is idempotent
+  forward(mn,routed,State('forwarder'))
  from access_control import main as apply_acp
  apply_acp(['--apply'])
  secure_mn=Client(mn.url,c.role_origin('forwarder'))
@@ -78,4 +78,5 @@ finally:
   except subprocess.TimeoutExpired:os.killpg(p.pid,signal.SIGKILL);p.wait()
 
  tmp.cleanup()
+
 

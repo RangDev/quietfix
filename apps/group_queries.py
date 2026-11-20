@@ -1,4 +1,4 @@
-"""Maintain an IN telemetry group and retrieve its latest CINs."""
+
 import config as c
 from onem2m_client import OneM2MError
 from resource_registry import discover_machines
@@ -36,4 +36,5 @@ def latest_group(client):
             sample = client.content(cin)
             readings[(sample['collector_id'],sample['machine_id'])] = sample
     return readings
+
 

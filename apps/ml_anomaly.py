@@ -1,4 +1,4 @@
-"""Per-collector, per-machine Isolation Forest; never trains on live traffic."""
+
 import hashlib
 import json
 from pathlib import Path
@@ -36,7 +36,7 @@ def train(rows, directory):
     for key, values in groups.items():
         if len(values) < 100:
             raise ValueError(f'{key}: at least 100 normal rows required (demo minimum)')
-        # Separate fit and calibration blocks; final test data are supplied separately.
+
         cut = int(len(values)*.8)
         model = IsolationForest(n_estimators=100, contamination='auto', random_state=42).fit(values[:cut])
         threshold = float(np.quantile(-model.score_samples(values[cut:]), .99))
@@ -67,7 +67,7 @@ class Models:
             return {'model_state': 'collecting_baseline', 'is_outlier': False}
         stamp = path.stat().st_mtime_ns
         if key not in self.cache or self.cache[key][0] != stamp:
-            # Only load locally trained/trusted artifacts. joblib is executable serialization.
+
             bundle = joblib.load(path)
             if (tuple(bundle['key']) != key or bundle['features'] != FEATURES
                     or bundle['sklearn'] != sklearn.__version__):
@@ -82,3 +82,4 @@ class Models:
         return {'model_state': 'ready', 'is_outlier': score > bundle['threshold'],
                 'anomaly_score': score, 'threshold': bundle['threshold'],
                 'model_version': bundle['version'], 'training_source': bundle['source']}
+

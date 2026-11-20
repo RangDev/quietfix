@@ -68,3 +68,4 @@ class MachineLearning(unittest.TestCase):
         self.assertLess(result['ml']['false_positive_rate'],.1)
         self.assertEqual(result['rule']['detection_rate'],0)
 if __name__=='__main__':unittest.main()
+

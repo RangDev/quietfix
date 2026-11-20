@@ -1,14 +1,14 @@
-"""Explicit opt-in ACP provisioning. Never changes data or deletes resources."""
+
 import argparse
 from urllib.parse import urlencode
 import config as c
 from onem2m_client import Client
 
-READ = 2 | 32  # RETRIEVE, DISCOVERY
+READ = 2 | 32
 CREATE, UPDATE, ALL = 1, 4, 63
 
 def policy_ref(base, name):
-    # Each gateway retains its own write policy when another is provisioned.
+
     if name in ('sensors', 'sensors-fcnt'):
         name += '-'+c.COLLECTOR_ID
     return base+'/qf-acp-'+name
@@ -40,7 +40,7 @@ def policies():
     }
 
 def provision_policy(client, base, name, rules):
-    # Runtime roles may reference/read ACPs, but only admin may modify them.
+
     readers = sorted({origin for r in rules for origin in r['acor']})
     attrs = {'rn': policy_ref(base,name).rsplit('/',1)[1],
              'pv': {'acr': [rule(c.ADMIN_ORIGIN, ALL), *rules]},
@@ -53,16 +53,16 @@ def attach(client, path, name, base):
     kind, attrs = next(iter(resource.items()))
     wanted = [policy_ref(base, name)]
     if attrs.get('acpi') != wanted:
-        # oneM2M requires acpi to be the sole attribute of an UPDATE.
-        # An AE without explicit ACPI can bootstrap it only as its owner.
-        # Subsequent changes use the administrator granted by our PVS.
+
+
+
         owner = attrs.get('aei') if kind == 'm2m:ae' and not attrs.get('acpi') else None
         client.call('PUT', path, {kind: {'acpi': wanted}}, origin=owner)
     if kind == 'm2m:grp' and attrs.get('macp') != [policy_ref(base, 'group')]:
         client.call('PUT', path, {kind: {'macp': [policy_ref(base, 'group')]}})
 
 def protect_tree(client, base, root, default):
-    # CINs inherit access from their containers; do not mutate immutable CINs.
+
     attach(client, root, default, base)
     for ty in (3,9,23,28,24):
         query = urlencode({'fu':1,'ty':ty,'drt':1,'lim':10000})
@@ -85,7 +85,7 @@ def main(argv=None):
     c.require_mn()
     if not args.apply:
         parser.error('Use --apply after reading ACP.md; this modifies resource permissions')
-    # Force role configuration validation even if caller has not enabled runtime mode.
+
     c.ACP_ENABLED = True
     specs = policies()
     mn, central = Client(c.MN_URL,c.ADMIN_ORIGIN), Client(c.IN_URL,c.ADMIN_ORIGIN)
@@ -100,7 +100,7 @@ def main(argv=None):
             c.ACP_ENABLED = True
             expected = c.role_origin(role)
             c.ACP_ENABLED = False
-            # archive AE is a storage namespace; forwarder registers separately on IN.
+
             if name != 'archive' and actual != expected:
                 raise RuntimeError(f'{base}/{name}: AE-ID is {actual}; set QF_{role.upper()}_ORIGIN accordingly')
         ensure_ae(central,c.IN_BASE,'forwarder')
@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
 
 def provision_backup_route(mn, central):
-    """Admin-only provisioning; runtime backup never connects directly to IN."""
+
     from resource_registry import ensure_archive
     actual = mn.call('GET', c.MN_BASE)['m2m:cb']['csi'].strip('/')
     if actual != c.MN_CSE_ID:
@@ -143,3 +143,4 @@ def provision_backup_route(mn, central):
         provision_policy(central, c.IN_BASE, name,
                          [rule(remote, operations), rule(c.role_origin('dashboard'), READ)])
     protect_tree(central, c.IN_BASE, c.IN_BASE+'/archive', 'archive')
+

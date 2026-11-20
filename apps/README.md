@@ -1,5 +1,7 @@
 # QuietFix 분리 버전 · 동적 머신/센서 등록
 
+최초 설치·학습·전체 실행은 [배포 가이드](../docs/DEPLOYMENT.md)를 따릅니다. 현재 분석은 머신별 Isolation Forest와 기존 임계값을 함께 사용합니다. [ML 안내](ML.md)를 참고하세요.
+
 수집기 하나가 여러 머신을 관리하고, 각 머신에는 여러 센서가 연결되는 구조입니다. 독립 ACME MN-CSE/IN-CSE를 사용합니다. 기본 서버 실행은 [standalone 가이드](../standalone/README.md)를 따릅니다. CSE 서버를 이 코드로 대체하지 않습니다.
 
 ## 등록과 데이터 흐름
@@ -208,3 +210,4 @@ These are independently configured features. They are not automatically installe
 ## oneM2M 전용 브랜치의 백업 경로
 
 `backup_ae.py`는 MN 장비에서 실행하며 측정 원본과 분석 결과를 MN에서 읽는다. IN 사본 저장 요청도 MN URL의 `~/IN-CSE-ID/IN-CSEBase/...`로 보낸다. MN이 Mcc로 전달하므로 백업 AE와 IN 사이에 직접 Mca 연결은 없다. 분석 AE와 백업 AE는 별도 프로그램이다. 초기 권한 설정과 사용자 지정 CSE-ID는 [standalone 가이드](../standalone/README.md)를 따른다. 이전 `forwarder_ae.py` 명령도 같은 백업 실행으로 연결되며 기존 신원·구독·SQLite 상태를 재사용한다.
+

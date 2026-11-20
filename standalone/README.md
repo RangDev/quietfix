@@ -1,5 +1,7 @@
 # oneM2M 전용 실행 구성
 
+처음 설치한다면 [통합 배포 가이드](../docs/DEPLOYMENT.md)를 먼저 따릅니다. ML 학습과 전체 서비스 start/stop/status/logs를 포함합니다. 아래는 개별 CSE·AE를 직접 운영할 때의 안내입니다.
+
 MEC Sandbox·Kubernetes·OAuth·ingress 없이 ACME IN/MN을 호스트 Python 프로세스로 실행한다. Linux와 Python 3.12 기준, ACME 2025.11 고정이다. DB는 CSE별 TinyDB 파일로 보존한다. 개발용 loopback HTTP/CAdmin 기준선이며 외부 공개용 보안 구성은 아니다.
 
 ## 준비
@@ -74,3 +76,4 @@ MEC 관련 배포·서비스 활용 평가 근거는 이 브랜치에 없다. �
 실행 파일은 `apps/backup_ae.py`이다. `forwarder_ae.py`는 같은 Mcc 실행을 호출하는 호환 진입점이다. 기존 리소스/ACP/구독/상태의 연속성을 위해 내부 AE 이름 `forwarder`, 신원 `Cqfforwarder`, `QF_FORWARDER_*`, `state/forwarder.sqlite3`를 유지한다. 두 진입점을 동시에 실행하지 않는다. 알림/주기 보완 조회 및 성공 후 체크포인트와 결정적 CIN 이름으로 재시도를 유지한다. 통신 중단 중에는 MN에 보존된 데이터만 나중에 복사할 수 있으므로 보존 한도 초과 전 복구해야 한다.
 
 ACP 모드에서는 `access_control.py --apply`가 로컬 읽기 신원과 IN의 `/id-quietfix-mn/Cqfforwarder` 권한을 준비한다. 사용자 지정 MN ID는 `QF_MN_CSE_ID`로 맞춘다. MN 전환 시 대상 MN의 SP-relative 백업 신원도 IN ACP에 미리 허용해야 한다. TLS를 쓸 경우 백업 AE의 HTTP 상대는 MN이므로 해당 신원 인증서를 MN 게이트웨이에 연결한다.
+

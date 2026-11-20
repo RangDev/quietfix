@@ -1,4 +1,4 @@
-"""AE backup management: read MN and store independent IN copies via Mcc."""
+
 import argparse
 import logging
 import config as c
@@ -18,7 +18,7 @@ def step(mn, central, state):
     paths = []
     for machine in discover_machines(mn, c.MN_BASE):
         parent = ensure_cnt(central, archive, machine['collector_id'])
-        # Copy the catalog even if telemetry has not changed (new sensors/name).
+
         target = register_machine(central, parent, machine)
         paths.append((machine['path']+'/telemetry', target+'/telemetry'))
     paths.append((ensure_analyzer(mn), results))
@@ -53,4 +53,5 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         pass
+
 

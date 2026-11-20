@@ -21,3 +21,4 @@ class DashboardSections(unittest.TestCase):
             file=Path(tmp)/'sections.json';file.write_text(json.dumps({'sections':[{'id':'a','name':'A','machines':[{'collector_id':'one','machine_id':'m'}]*2}]}))
             with patch.dict(os.environ,{'QF_DASHBOARD_SECTIONS':str(file)}):
                 with self.assertRaises(ValueError):section_settings()
+

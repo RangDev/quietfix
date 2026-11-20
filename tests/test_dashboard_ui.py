@@ -1,4 +1,4 @@
-"""Opt-in browser interaction test with deterministic mock API data."""
+
 import json,os,sys,threading,unittest
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
@@ -11,12 +11,12 @@ class DashboardUI(unittest.TestCase):
         from playwright.sync_api import sync_playwright,expect
         machines=[]
         for i,status in enumerate(['normal','abnormal','unassessed','normal','normal'],1):
-            machines.append({'collector_id':'collector-01','machine_id':f'machine-{i:02}', 'machine_name':f'머신 {i}',
-              'section_id':'a' if i<=2 else 'b' if i<=4 else 'unassigned','section_name':'A 구역' if i<=2 else 'B 구역' if i<=4 else '미배정',
-              'state':'ready','sensors':[{'sensor_id':'t','type':'temperature','label':'온도','unit':'°C'}],
-              'telemetry':{'sample_id':f's{i}','timestamp':'2026-11-18T22:00:00+09:00','sensors':[{'sensor_id':'t','type':'temperature','label':'온도','unit':'°C','value':78 if status=='abnormal' else 42}]},
+            machines.append({'collector_id':'collector-01','machine_id':f'machine-{i:02}', 'machine_name':f'\uba38\uc2e0 {i}',
+              'section_id':'a' if i<=2 else 'b' if i<=4 else 'unassigned','section_name':'A \uad6c\uc5ed' if i<=2 else 'B \uad6c\uc5ed' if i<=4 else '\ubbf8\ubc30\uc815',
+              'state':'ready','sensors':[{'sensor_id':'t','type':'temperature','label':'\uc628\ub3c4','unit':'°C'}],
+              'telemetry':{'sample_id':f's{i}','timestamp':'2026-11-18T22:00:00+09:00','sensors':[{'sensor_id':'t','type':'temperature','label':'\uc628\ub3c4','unit':'°C','value':78 if status=='abnormal' else 42}]},
               'analysis':{'status':status,'method':'demo_threshold_rule','sensors':[{'sensor_id':'t','status':status}]}})
-        payload={'machines':machines,'sections':[{'id':'a','name':'A 구역'},{'id':'b','name':'B 구역'},{'id':'unassigned','name':'미배정'}],'alerts':[],'updated_at':'2026-11-18T22:00:01+09:00','error':None}
+        payload={'machines':machines,'sections':[{'id':'a','name':'A \uad6c\uc5ed'},{'id':'b','name':'B \uad6c\uc5ed'},{'id':'unassigned','name':'\ubbf8\ubc30\uc815'}],'alerts':[],'updated_at':'2026-11-18T22:00:01+09:00','error':None}
         mode={'fail':False}
         class Handler(BaseHTTPRequestHandler):
             def log_message(self,*args):pass
@@ -33,15 +33,15 @@ class DashboardUI(unittest.TestCase):
                 expect(page.locator('.machine')).to_have_count(5)
                 self.assertEqual(page.locator('.section').nth(0).locator('.machine').count(),2)
                 self.assertEqual(page.locator('.section').nth(1).locator('.machine').count(),2)
-                expect(page.locator('.section').nth(2)).to_contain_text('미배정')
+                expect(page.locator('.section').nth(2)).to_contain_text('\ubbf8\ubc30\uc815')
                 self.assertNotIn('78',page.locator('#sections').inner_text())
                 self.assertNotIn('°C',page.locator('#sections').inner_text())
                 self.assertEqual(page.locator('.machine.normal').count(),3)
                 self.assertEqual(page.locator('.machine.abnormal').count(),1)
-                page.get_by_role('button',name='머신 2 · 이상 감지 · 상세 보기',exact=True).click()
-                expect(page.locator('#detail-title')).to_have_text('머신 2 상세')
+                page.get_by_role('button',name='\uba38\uc2e0 2 · \uc774\uc0c1 \uac10\uc9c0 · \uc0c1\uc138 \ubcf4\uae30',exact=True).click()
+                expect(page.locator('#detail-title')).to_have_text('\uba38\uc2e0 2 \uc0c1\uc138')
                 expect(page.locator('#detail-body')).to_contain_text('78')
-                # Auto refresh updates detail while retaining selection and close-button focus.
+
                 machines[1]['telemetry']['sensors'][0]['value']=79
                 expect(page.locator('#detail-body .metric strong')).to_contain_text('79',timeout=6000)
                 expect(page.locator('.machine[aria-pressed=true]')).to_have_count(1)
@@ -50,19 +50,20 @@ class DashboardUI(unittest.TestCase):
                 if screenshot:page.screenshot(path=screenshot,full_page=True)
                 page.keyboard.press('Escape')
                 expect(page.locator('#close')).to_be_hidden()
-                expect(page.get_by_role('button',name='머신 2 · 이상 감지 · 상세 보기',exact=True)).to_be_focused()
+                expect(page.get_by_role('button',name='\uba38\uc2e0 2 · \uc774\uc0c1 \uac10\uc9c0 · \uc0c1\uc138 \ubcf4\uae30',exact=True)).to_be_focused()
                 page.keyboard.press('Enter');expect(page.locator('#close')).to_be_visible()
                 mode['fail']=True
                 expect(page.locator('.machine.normal')).to_have_count(0,timeout=6000)
                 expect(page.locator('#error')).to_be_visible()
-                expect(page.locator('#detail-body')).to_contain_text('현재 상태를 확인할 수 없습니다.')
+                expect(page.locator('#detail-body')).to_contain_text('\ud604\uc7ac \uc0c1\ud0dc\ub97c \ud655\uc778\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.')
                 mode['fail']=False
                 page.set_viewport_size({'width':390,'height':844})
                 page.reload();expect(page.locator('.machine')).to_have_count(5)
-                page.get_by_role('button',name='머신 1 · 정상 · 상세 보기',exact=True).click()
-                expect(page.locator('#detail-title')).to_have_text('머신 1 상세')
+                page.get_by_role('button',name='\uba38\uc2e0 1 · \uc815\uc0c1 · \uc0c1\uc138 \ubcf4\uae30',exact=True).click()
+                expect(page.locator('#detail-title')).to_have_text('\uba38\uc2e0 1 \uc0c1\uc138')
                 self.assertTrue(page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'))
                 if screenshot:page.screenshot(path=screenshot.replace('.png','-mobile.png'),full_page=True)
                 self.assertEqual(errors,[])
                 browser.close()
         finally:server.shutdown();server.server_close();thread.join()
+

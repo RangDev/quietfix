@@ -1,4 +1,4 @@
-"""Typed-model validation, consistency and compatibility checks."""
+
 import copy
 import json
 from pathlib import Path
@@ -51,3 +51,4 @@ class FlexModelTests(unittest.TestCase):
         from analyzer_ae import analyze
         row=copy.deepcopy(self.sample);row['sensors'][0]['unit']='F'
         self.assertEqual(analyze(row)['sensors'][0]['status'],'unassessed')
+

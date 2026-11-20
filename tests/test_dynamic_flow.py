@@ -1,4 +1,4 @@
-"""HTTP contract tests with a local oneM2M test double, not a live ACME server."""
+
 import copy
 import json
 import os
@@ -138,7 +138,7 @@ class DynamicFlow(unittest.TestCase):
         self.run_app('forwarder_ae.py','--once')
 
     def test_dynamic_registration_restart_extension_and_gateway_namespace(self):
-        # No setup script or predefined machine list.
+
         args = ('--dataset',str(APPS.parent/'test_data/test_data_expanded.json'),'--interval','0','--cycles','1')
         self.run_app('collector_ae.py', *args)
         self.pipeline()
@@ -154,12 +154,12 @@ class DynamicFlow(unittest.TestCase):
         self.assertEqual(unknown['analysis']['status'],'unassessed')
         self.assertIn('mn/collector-01/machine-machine-03/telemetry', self.server.resources)
         self.assertNotIn('mn/collector-02',self.server.resources)
-        # Re-running all processes with the same checkpoint adds no samples/results.
+
         before = copy.deepcopy(self.server.resources)
         self.run_app('collector_ae.py', *args)
         self.pipeline()
         self.assertEqual(before,self.server.resources)
-        # A second collector may reuse machine IDs without mixing data or alerts.
+
         self.run_app('collector_ae.py', *args, QF_COLLECTOR_ID='gateway-west')
         self.pipeline()
         snap = dashboard.snapshot()
@@ -191,16 +191,16 @@ class DynamicFlow(unittest.TestCase):
         m=next(m for m in snap['machines'] if m['machine_id']=='machine-01')
         self.assertEqual(len(m['sensors']),2)
         self.assertEqual(m['analysis']['status'],'abnormal')
-        # A registered sensor omitted from a later complete snapshot is not given an old value.
+
         publish(client,sample('machine-01','fourth',[temp]))
         self.pipeline()
         m=next(m for m in dashboard.snapshot()['machines'] if m['machine_id']=='machine-01')
         self.assertEqual(len(m['sensors']),2)
         self.assertEqual(len(m['telemetry']['sensors']),1)
-        # Lost POST response retry is idempotent at the CIN level.
+
         publish(client,sample('machine-01','fourth',[temp]))
         self.assertEqual(len(list(client.records('mn/gateway/machine-machine-01/telemetry'))),3)
-        # Metadata remains one CIN with a union of all registered sensor descriptors.
+
         self.assertEqual(len(list(client.records('mn/gateway/machine-machine-01/metadata'))),1)
 
     def test_running_workers_discover_new_devices_without_restart(self):
@@ -272,9 +272,9 @@ class DynamicFlow(unittest.TestCase):
         with Notifications('127.0.0.1',0) as receiver:
             url=f'http://127.0.0.1:{receiver.server.server_port}/notify'
             subscribe(client,'analyzer',url)
-            self.assertFalse(receiver.wake.is_set())  # verification is acknowledged, not processed
+            self.assertFalse(receiver.wake.is_set())
             publish(client,sensor.read_measurements(1))
-            subscribe(client,'analyzer',url)  # newly discovered machine gets a subscription
+            subscribe(client,'analyzer',url)
             publish(client,sensor.read_measurements(6))
             self.assertTrue(receiver.wake.wait(2))
             self.pipeline()
@@ -284,11 +284,11 @@ class DynamicFlow(unittest.TestCase):
             publish(client,sensor.read_measurements(2))
             self.pipeline()
             self.assertEqual(len(latest_group(client)),3)
-            # Repeated group reconciliation must update members without duplicates.
+
             sync_group(client)
             members=self.server.resources['in/archive/telemetryGroup']['mid']
             self.assertEqual(len(members),len(set(members)))
-            # Empty member is a per-member error, not a failure of the whole response.
+
             del self.server.resources[next(k for k,v in self.server.resources.items()
                 if k.startswith('in/archive/collector-01/machine-machine-01/telemetry/') and v['ty']==4)]
             self.assertEqual(len(latest_group(client)),2)
@@ -351,4 +351,5 @@ class Schema(unittest.TestCase):
 
 if __name__=='__main__':
     unittest.main()
+
 

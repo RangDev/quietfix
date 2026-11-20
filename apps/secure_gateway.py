@@ -1,4 +1,4 @@
-"""mTLS oneM2M gateway; expose this port and isolate the plaintext CSE backend."""
+
 import argparse
 import json
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
@@ -49,3 +49,4 @@ def main():
     try:server.serve_forever()
     finally:server.server_close()
 if __name__=='__main__':main()
+

@@ -1,4 +1,4 @@
-"""oneM2M TS-0010 JSON MQTT binding; QoS 1 is not an application response."""
+
 import json
 import ssl
 import threading
@@ -40,7 +40,7 @@ def response_content(response):
     if isinstance(rsc,bool) or not isinstance(rsc,int):
         raise ValueError('Missing or invalid oneM2M response status')
     if rsc>=4000:
-        # Keep HTTP-compatible errors for ensure() and immutable CIN retry handling.
+
         status={4000:400,4004:404,4005:405,4103:403,4105:409,5000:500,5103:503}.get(rsc,400)
         class Response:
             status_code=status
@@ -93,7 +93,7 @@ class MQTTClient(Client):
     def _connected(self,client,userdata,flags,reason,properties):
         self.ready.clear()
         if reason.is_failure:return
-        # SUBACK, rather than CONNACK alone, makes requests safe from response races.
+
         with self.lock:
             rc,self.subscribe_mid=client.subscribe(self.response_topic,qos=1)
             if rc!=0:self.subscribe_mid=None
@@ -143,3 +143,4 @@ class MQTTClient(Client):
         with self.lock:
             for entry in self.pending.values():
                 entry['error']=ConnectionError('MQTT client closed');entry['event'].set()
+

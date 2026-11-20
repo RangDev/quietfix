@@ -1,4 +1,4 @@
-"""Shared oneM2M HTTP operations. No application scheduling here."""
+
 import hashlib
 import json
 import uuid
@@ -43,7 +43,7 @@ class Client:
                 raise
             return self.call('GET', parent+'/'+attrs['rn'])
     def put(self, container, data):
-        # Immutable deterministic CIN name makes retry after a lost response safe.
+
         rn = 'qf-' + hashlib.sha256(data['sample_id'].encode()).hexdigest()
         try:
             self.call('POST', container, {'m2m:cin': {'rn': rn,
@@ -59,7 +59,7 @@ class Client:
         v = cin['con']
         return json.loads(v) if isinstance(v, str) else v
     def records(self, container):
-        # Discover all retained CINs, rather than only /la (which can skip samples).
+
         result = self.call('GET', container+'?fu=1&ty=4&drt=1&lim=10000')
         if len(result.get('m2m:uril', [])) >= 10000:
             raise RuntimeError('CIN discovery limit reached; narrow the migration/reconciliation scope')
@@ -68,7 +68,7 @@ class Client:
     def latest(self, container):
         return self.content(self.call('GET', container+'/la')['m2m:cin'])
 
-# Collector transport selection is explicit; other applications remain HTTP.
+
 import atexit
 import threading
 _collector_clients = {}
@@ -97,17 +97,17 @@ atexit.register(close_collector_clients)
 
 
 class ArchiveViaMN(Client):
-    """IN resource operations sent exclusively to the current MN HTTP endpoint.
 
-    Keep the local origin on Mca: the MN qualifies it before Mcc forwarding.
-    The source client is shared so controlled MN handover also changes this route.
-    """
+
+
+
+
     def __init__(self, mn):
         self.mn = mn
         super().__init__(mn.url, mn.origin)
 
     def call(self, method, path, body=None, ty=None, origin=None):
-        # Local IN structured paths and SP-relative discovery URIs are both valid.
+
         target = path.lstrip('/')
         if target.startswith('~/'):
             target = target[2:]
@@ -116,7 +116,7 @@ class ArchiveViaMN(Client):
         if not (target == c.IN_CSE_ID or target.startswith(c.IN_CSE_ID+'/') or target.startswith(c.IN_CSE_ID+'?')):
             raise ValueError('Archive request must target the configured IN-CSE')
         if method == 'POST' and ty in (3, 9, 24, 28) and body:
-            # Explicit policies keep remotely created resources maintainable by IN admin.
+
             from access_control import policy_ref
             policy = 'group' if ty == 9 else 'archive-fcnt' if ty in (24, 28) else 'archive'
             kind, attrs = next(iter(body.items()))
@@ -126,3 +126,4 @@ class ArchiveViaMN(Client):
             body = {kind: attrs}
         self.url = self.mn.url
         return super().call(method, '~/'+target, body, ty, origin)
+

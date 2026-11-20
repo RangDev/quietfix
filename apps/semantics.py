@@ -1,4 +1,4 @@
-"""SAREF 3.1.1 measurements with explicit local extensions and QUDT units."""
+
 import base64
 import math
 from urllib.parse import urlencode,quote
@@ -47,7 +47,7 @@ def publish_descriptor(client,path,attrs):
     if old.get('dsp')!=dsp:client.call('PUT',path+'/meaning',{'m2m:smd':{'dsp':dsp}})
 
 def discover_paths(client,base,property_type=None):
-    # Server discovers SMD resources; RDF matching is an explicit client SPARQL query.
+
     uris=client.call('GET',base+'?'+urlencode({'fu':1,'ty':24,'drt':1,'lim':10000})).get('m2m:uril',[])
     if len(uris)>=10000:raise RuntimeError('Semantic discovery limit reached')
     graph=Graph()
@@ -67,3 +67,4 @@ def discover_paths(client,base,property_type=None):
       ?p a ?kind . '''+clause+''' }'''
     parents={uri.rsplit('/',1)[0].lstrip('/') for uri in uris}
     return sorted(str(row.path) for row in graph.query(query) if str(row.path).lstrip('/') in parents)
+

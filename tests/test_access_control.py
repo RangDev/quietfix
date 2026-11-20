@@ -1,4 +1,4 @@
-"""Policy contracts and secure-mode regression tests; live enforcement is separate."""
+
 import sys
 from pathlib import Path
 import unittest
@@ -64,3 +64,4 @@ class AccessControlTests(unittest.TestCase):
         self.assertEqual(request.call_args.kwargs['headers']['X-M2M-Origin'],c.role_origin('dashboard'))
 
 if __name__=='__main__':unittest.main()
+

@@ -1,4 +1,4 @@
-"""Notification wake-ups plus periodic retained-data reconciliation."""
+
 import json
 import logging
 import os
@@ -79,7 +79,7 @@ def run(role, client, step, once=False):
             except Exception:
                 logging.exception('%s reconciliation failed', role)
             threading.Event().wait(max(c.POLL_SECONDS, .1))
-    # Receiver must be live before creating subscriptions (verification requests).
+
     with Notifications(c.NOTIFY_HOST, getattr(c, role.upper()+'_NOTIFY_PORT')) as receiver:
         while True:
             receiver.wake.clear()
@@ -91,5 +91,6 @@ def run(role, client, step, once=False):
                 step()
             except Exception:
                 logging.exception('%s reconciliation failed', role)
-            # A notification during processing stays set: no wake-up is lost.
+
             receiver.wake.wait(max(c.RECONCILE_SECONDS, .1))
+
