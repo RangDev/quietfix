@@ -60,7 +60,7 @@ source runtime/standalone/session.env
 - MQTT/mTLS: 독립 기능으로 유지된다. MQTT는 별도 브로커와 ACME 바인딩 설정이 필요하다. manage.py 실행은 기본 --no-mqtt이므로 MQTT 시험 시 이 플래그를 제거하고 인증·CA·브로커 설정을 적용해야 한다. HTTP 게이트웨이는 loopback backend와 사용할 수 있다. CSE의 MQTT/알림 발신 인증서 지원 제약은 MEC 제거만으로 해결되지 않는다. apps/MQTT.md와 security/README.md 참조.
 - 계획된 전환: manage.py backup으로 별도 MN을 실행하고 apps/HANDOVER.md에 따라 공용 QF_ROUTE_FILE·ACP를 준비한다. A가 살아 있을 때 B로 이전한다. 자동 장애 승계가 아니다.
 
-MEC 관련 배포·서비스 활용 평가 근거는 이 브랜치에 없다. 기존 main의 이력은 보존한다. 실제 알림·권한·8대 데이터 경로 시험은 앱 로그와 sample_id로 확인하고 독립 unittest 성공과 구분한다.
+실제 알림·권한·8대 데이터 경로는 앱 로그와 sample_id로 확인한다. 단위 테스트와 실제 CSE 통합 시험은 별도로 수행한다.
 
 ## 재현 가능한 검증
 
@@ -76,4 +76,3 @@ MEC 관련 배포·서비스 활용 평가 근거는 이 브랜치에 없다. �
 실행 파일은 `apps/backup_ae.py`이다. `forwarder_ae.py`는 같은 Mcc 실행을 호출하는 호환 진입점이다. 기존 리소스/ACP/구독/상태의 연속성을 위해 내부 AE 이름 `forwarder`, 신원 `Cqfforwarder`, `QF_FORWARDER_*`, `state/forwarder.sqlite3`를 유지한다. 두 진입점을 동시에 실행하지 않는다. 알림/주기 보완 조회 및 성공 후 체크포인트와 결정적 CIN 이름으로 재시도를 유지한다. 통신 중단 중에는 MN에 보존된 데이터만 나중에 복사할 수 있으므로 보존 한도 초과 전 복구해야 한다.
 
 ACP 모드에서는 `access_control.py --apply`가 로컬 읽기 신원과 IN의 `/id-quietfix-mn/Cqfforwarder` 권한을 준비한다. 사용자 지정 MN ID는 `QF_MN_CSE_ID`로 맞춘다. MN 전환 시 대상 MN의 SP-relative 백업 신원도 IN ACP에 미리 허용해야 한다. TLS를 쓸 경우 백업 AE의 HTTP 상대는 MN이므로 해당 신원 인증서를 MN 게이트웨이에 연결한다.
-

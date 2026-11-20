@@ -1,6 +1,6 @@
 # 수집기 oneM2M MQTT 바인딩
 
-## 구현 계획
+## 통신 구조
 
 수집기와 MN-CSE 사이에 oneM2M TS-0010 JSON 요청·응답 바인딩을 추가한다. 센서 JSON을 임의의 MQTT 토픽에 발행하고 별도 브리지가 HTTP로 옮기는 구조가 아니다. ACME가 직접 MQTT 요청 primitive를 처리한다. 분석기·전달기·대시보드는 기존 HTTP를 유지한다.
 
@@ -53,7 +53,7 @@ HTTP로 돌아가려면 `QF_COLLECTOR_PROTOCOL=http`로 바꾸고 수집기를 �
 
 원격 운영 브로커에는 사용자 인증과 토픽 ACL 및 TLS를 적용한다. `mqtts://HOST:8883`은 인증서 검증을 사용하고 필요하면 QF_MQTT_CA_FILE로 CA를 지정한다. 사용자명과 비밀번호는 URL에 넣지 않고 QF_MQTT_USERNAME과 QF_MQTT_PASSWORD로 제공한다. 저장소에는 실제 자격증명을 기록하지 않는다.
 
-브로커 ACL은 수집기가 자기 요청 토픽에만 쓰고 자기 응답 토픽만 읽도록 제한한다. CSE는 자신의 요청·응답·등록 토픽에 필요한 권한을 가져야 한다. CSE 측 인증 설정도 별도로 구성한다. Originator 문자열과 ACP만으로 발신자의 신원 인증이 완성되는 것은 아니다. 이번 로컬 통합 검증은 loopback의 익명 브로커를 사용했으며 실제 인증·TLS 브로커 운영을 검증했다고 주장하지 않는다.
+브로커 ACL은 수집기가 자기 요청 토픽에만 쓰고 자기 응답 토픽만 읽도록 제한한다. CSE는 자신의 요청·응답·등록 토픽에 필요한 권한을 가져야 한다. CSE 측 인증 설정도 별도로 구성한다. Originator 문자열과 ACP만으로 발신자의 신원 인증이 완성되는 것은 아니다. 로컬 통합 검증은 loopback 익명 브로커를 사용했다. 인증·TLS 브로커 운영은 별도 검증이 필요하다.
 
 ## 검증
 
@@ -63,7 +63,7 @@ HTTP로 돌아가려면 `QF_COLLECTOR_PROTOCOL=http`로 바꾸고 수집기를 �
 python -m unittest discover -s tests -v
 ```
 
-별도의 개발 환경에 ACME 2025.11, amqtt 0.11.3과 프로젝트 의존성을 설치하면 다음 시험은 실제 브로커와 두 ACME를 임시 포트·메모리 DB로 실행한다. 사용자 서버를 변경하지 않는다.
+별도의 개발 환경에 ACME 2025.11, amqtt 0.11.3과 프로젝트 의존성을 설치하면 다음 시험은 실제 브로커와 두 ACME를 임시 포트·메모리 DB로 실행한다.
 
 ```bash
 QF_RUN_LIVE_ACME=1 QF_RUN_MQTT=1 python -m unittest discover -s tests -p test_live_acme.py -v
@@ -79,7 +79,7 @@ QF_RUN_LIVE_ACME=1 QF_RUN_MQTT=1 python -m unittest discover -s tests -p test_li
 - 브로커 중단 시 타임아웃, 재시작 후 자동 재연결·재구독 및 정상 요청 복구
 - 잘못된 응답 토픽·rqi·신원 무시, PUBACK만으로 성공 처리하지 않음, HTTP 모드 호환
 
-사용자 VM에는 코드 배포 후 브로커와 ACME MQTT 설정을 적용하고 같은 경로를 별도로 검증해야 한다. 통신량·전력·지연 개선 수치는 측정하지 않았으며, 지속 연결이 유리한 수집기 구간에 MQTT를 선택했다는 설계 근거와 실제 동작을 평가 자료로 제시한다.
+배포 환경에서는 브로커와 ACME MQTT 설정을 적용한 뒤 같은 경로를 검증한다. 통신량·전력·지연 개선 수치는 측정하지 않았다.
 
 ## 참고
 
