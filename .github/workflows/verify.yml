@@ -22,6 +22,12 @@ jobs:
           cache: pip
           cache-dependency-path: standalone/requirements-lock.txt
       - run: python -m pip install -r standalone/requirements-lock.txt
-      - run: python -m compileall -q apps standalone tests
+      - run: python -m compileall -q apps standalone tests tools deploy
       - run: python -m unittest discover -s tests -v
-      - run: python standalone/smoke_test.py
+      - run: python tools/build_packages.py
+      - run: python dist/single-vm/standalone/smoke_test.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quietfix-deployment-packages
+          path: dist/
+          retention-days: 14

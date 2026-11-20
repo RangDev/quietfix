@@ -23,6 +23,10 @@ flowchart LR
 - Per-machine models require explicit training. Machines without models indicate that preparation is required and retain threshold monitoring.
 - MEC and Kubernetes are not used. The backup management AE uses the Mcc path in place of the former forwarder.
 
+## Deployment Packages
+
+Run `python tools/build_packages.py` to generate independent single-VM and three-device packages in `dist/`. See [package instructions](docs/PACKAGES.md).
+
 ## Installation and Execution
 
 Follow the **[deployment guide](docs/DEPLOYMENT.md)** to prepare a new Linux environment, train ML models, start, stop, and restart services.

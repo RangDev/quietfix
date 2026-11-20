@@ -92,3 +92,20 @@ and string values. The English translation merged into main translates those run
 - Standalone ACME smoke test passed: IN/MN types, Mcc routing, eight-machine source/analysis/archive/dashboard,
   MN-only backup HTTP, matching central copies, restart deduplication, group membership, and role ACP.
 - User VM deployment and optional browser UI/MQTT TLS integrations were not performed for this cleanup.
+
+## Independent Deployment Packages (2026-11-21)
+
+- Base: main commit `3de0034`. Original standalone commands remain unchanged.
+- Build creates single-vm/ and distributed/{collector,field,central}/ from shared source.
+- Package tests passed: file hashes, relocated node commands/configuration, overwrite refusal,
+  and exclusion of runtime state, private keys, and trained models.
+- Existing regression suite: 75 tests, 72 passed, 3 optional integrations skipped.
+- Two new package tests passed separately.
+- Generated packages copied outside the source checkout: actual ACME central/field processes
+  and a separate collector runner populated eight machines with telemetry and analysis in the
+  central dashboard API. Field provisioning and Mcc archive delivery succeeded.
+- The relocated single-VM package passed its actual ACME smoke test.
+- Distributed validation used separate process roots on loopback on one Linux host; it does
+  not establish physical three-device connectivity, firewall configuration, TLS, or reboot supervision.
+- CI now builds packages, runs the generated single-VM smoke test, and uploads dist as an artifact.
+  Remote CI execution is not included in these local results.
