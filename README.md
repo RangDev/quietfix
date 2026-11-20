@@ -49,3 +49,5 @@ source session.env
 
 머신별 적응형 수집은 `.venv/bin/python apps/collector_ae.py --replay-id adaptive01`로 실행합니다. 기본적으로 머신별 1초 측정, 정상 5초/이상 1초 전송, 이상·회복 즉시 전송 대기열 등록을 사용합니다. 기존 `--interval` 명령은 순차 재생 호환 모드입니다. 시간 기반 시나리오와 대기열 정책은 apps/README.md의 v4 절을 참고하세요.
 
+## 머신러닝 분석
+머신별 Isolation Forest 도입 및 학습·시험·실행 절차는 [apps/ML.md](apps/ML.md)를 참조한다.

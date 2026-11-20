@@ -62,3 +62,9 @@ if SEMANTIC_ENABLED and not FLEX_ENABLED:
 # SP-relative CSE IDs for Mcc routing (not HTTP endpoints).
 IN_CSE_ID = os.getenv('QF_IN_CSE_ID', '/id-quietfix-in').strip('/')
 MN_CSE_ID = os.getenv('QF_MN_CSE_ID', '/id-quietfix-mn').strip('/')
+
+# Baseline learning is explicit; live telemetry is never automatically learned.
+ML_MODEL_DIR = Path(os.getenv('QF_ML_MODEL_DIR', str(STATE / 'ml_models')))
+ML_CONSECUTIVE = int(os.getenv('QF_ML_CONSECUTIVE', '3'))
+if ML_CONSECUTIVE < 1:
+    raise ValueError('QF_ML_CONSECUTIVE must be positive')
