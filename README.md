@@ -4,6 +4,8 @@ oneM2M-based industrial equipment monitoring and per-machine anomaly detection p
 The current implementation is maintained on **`main`**. It collects temperature, vibration, and current,
 and combines a separate Isolation Forest model for each machine with safety thresholds.
 
+Project article: [QuietFix: oneM2M Industrial AI Monitoring on Hackster.io](https://www.hackster.io/558031/quietfix-onem2m-industrial-ai-monitoring-d3abe1)
+
 ## Architecture and Data Flow
 
 ```mermaid
